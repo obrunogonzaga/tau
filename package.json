@@ -1,0 +1,15 @@
+{
+  "name": "my-pi-version",
+  "version": "0.0.1",
+  "private": true,
+  "description": "My-only version customization layer for pi CLI",
+  "type": "module",
+  "bin": {
+    "my-pi": "./bin/my-pi.js"
+  },
+  "scripts": {
+    "pi": "pi",
+    "my-pi": "node ./bin/my-pi.js",
+    "setup:pi": "bash ./scripts/setup-pi-settings.sh"
+  }
+}

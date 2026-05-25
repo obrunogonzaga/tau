@@ -1,0 +1,9 @@
+{
+  "defaultProvider": "anthropic",
+  "defaultModel": "claude-opus-4-7",
+  "defaultThinkingLevel": "high",
+  "terminal": {
+    "showTerminalProgress": false
+  },
+  "theme": "dark"
+}
