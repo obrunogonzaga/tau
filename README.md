@@ -1,6 +1,6 @@
 # my-pi-version
 
-This repo stores my customized version of `pi` CLI (configs, extensions, prompts, scripts).
+This repo stores my customized `pi` CLI layer: router, prompts, configs, extensions, scripts.
 
 ## What is inside
 
@@ -8,7 +8,7 @@ This repo stores my customized version of `pi` CLI (configs, extensions, prompts
 - `prompts/`     shared prompt templates
 - `scripts/`     helper scripts
 - `agent-settings.example.json` template for ~/.pi/agent/settings.json
-- `bin/my-pi.js` thin wrapper to run current installed pi
+- `bin/my-pi.js` wrapper/router to run current installed pi
 
 ## Quick start
 
@@ -24,12 +24,6 @@ This repo stores my customized version of `pi` CLI (configs, extensions, prompts
    - `my-pi work "implement this"`
 6. Start with deep profile:
    - `my-pi deep "debug this hard bug"`
-7. Quick ask:
-   - `my-pi ask "what is this repo?"`
-8. Coding mode:
-   - `my-pi code "implement this"`
-9. Review mode:
-   - `my-pi review "review current changes"`
 
 ## Profiles
 
@@ -44,10 +38,29 @@ A profile is a named preset that expands to pi flags.
 - `ask`: `-p`
 - `code`: same as `work`
 - `review`: same as `work`, plus `--tools read,grep,find,ls,bash -p`
+- `plan`: same as `work`, plus read tools, print mode, planning prompt
+- `grill`: same as `deep`, plus read tools, print mode, critique prompt
+- `fix`: same as `work`, plus focused fix prompt
+- `commit`: same as `work`, plus read/bash tools, print mode, commit prompt
+- `pr`: same as `work`, plus read/bash tools, print mode, PR prompt
+- `debug`: same as `deep`, plus read/bash tools, print mode, debug prompt
+
+Examples:
+
+- `my-pi ask "what is this repo?"`
+- `my-pi code "implement this"`
+- `my-pi review "review current changes"`
+- `my-pi plan "split M2 into phases"`
+- `my-pi grill "attack this architecture"`
+- `my-pi fix "repair failing tests"`
+- `my-pi commit "prepare commit for current diff"`
+- `my-pi pr "draft PR for current branch"`
+- `my-pi debug "reproduce failing npm test"`
 
 Aliases can use a profile override:
 
 - `my-pi review --profile deep "review diff"`
+- `my-pi plan --profile fast "quick plan"`
 - `my-pi --profile fast "quick task"`
 
 `--profile` is only parsed at the start or right after an alias.
@@ -56,6 +69,7 @@ Aliases can use a profile override:
 
 - `MY_PI_SETTINGS_PATH`: path to a custom settings file (defaults to `~/.pi/agent/settings.json`).
 - `MY_PI_BANNER`: custom banner text (set to `0` to disable).
+- `MY_PI_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
 - Logs: minimal startup logs are written to `<config-dir>/my-pi/logs/pi-YYYY-MM-DD.log`.
 - Sessions: `my-pi` stores sessions in `~/.pi/my-pi/sessions`.
 
@@ -63,6 +77,7 @@ Examples:
 
 - `MY_PI_SETTINGS_PATH=./profiles/dev.json npm run my-pi`
 - `MY_PI_BANNER=my-ops-pi npm run my-pi`
+- `MY_PI_NO_PROMPT=1 my-pi ask "raw upstream behavior"`
 
 ## Versioning
 

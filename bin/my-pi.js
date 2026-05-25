@@ -12,15 +12,39 @@ const profiles = {
   work: ['--provider', 'github-copilot', '--model', 'gpt-5.5', '--thinking', 'medium'],
 }
 
+const READ_TOOLS = 'read,grep,find,ls'
+const DEBUG_TOOLS = `${READ_TOOLS},bash`
+
+const taskPrompts = {
+  commit: 'Prepare concise conventional commit guidance. Inspect state before proposing text.',
+  debug: 'Investigate first. Reproduce, isolate evidence, then suggest the smallest fix.',
+  fix: 'Fix narrowly. Inspect real state, edit only needed files, test before reporting done.',
+  grill: 'Critique the plan hard. Surface risks, weak assumptions, missing tests, and open questions.',
+  plan: 'Plan first. Do not implement unless explicitly asked. End with unresolved questions.',
+  pr: 'Prepare concise PR text with summary, tests, risks, and checklist.',
+}
+
 const aliasExtras = {
   ask: ['-p'],
   code: [],
+  commit: ['--tools', DEBUG_TOOLS, '-p'],
+  debug: ['--tools', DEBUG_TOOLS, '-p'],
+  fix: [],
+  grill: ['--tools', READ_TOOLS, '-p'],
+  plan: ['--tools', READ_TOOLS, '-p'],
+  pr: ['--tools', DEBUG_TOOLS, '-p'],
   review: ['--tools', 'read,grep,find,ls,bash', '-p'],
 }
 
 const aliasProfiles = {
   ask: [],
   code: profiles.work,
+  commit: profiles.work,
+  debug: profiles.deep,
+  fix: profiles.work,
+  grill: profiles.deep,
+  plan: profiles.work,
+  pr: profiles.work,
   review: profiles.work,
 }
 
@@ -41,14 +65,23 @@ const extractProfile = (args) => {
   return { args, profileName: null }
 }
 
+const resolvePromptPath = () => path.resolve(import.meta.dirname, '..', 'prompts', 'system-prompt.md')
+
+const shouldAppendPrompt = () => process.env.MY_PI_NO_PROMPT !== '1'
+
+const readPrompt = () => fs.readFileSync(resolvePromptPath(), 'utf8').trim()
+
+const appendSystemPrompt = (args, promptText) => ['--append-system-prompt', promptText, ...args]
+
 const resolveArgs = (rawInputArgs) => {
   const { args: inputArgs, profileName } = extractProfile(rawInputArgs)
   const [firstArg, ...restArgs] = inputArgs
 
   if (aliasProfiles[firstArg]) {
     const profileArgs = profiles[profileName] ?? aliasProfiles[firstArg]
+    const promptArgs = shouldAppendPrompt() && taskPrompts[firstArg] ? ['--append-system-prompt', taskPrompts[firstArg]] : []
 
-    return [...profileArgs, ...aliasExtras[firstArg], ...restArgs]
+    return [...profileArgs, ...aliasExtras[firstArg], ...promptArgs, ...restArgs]
   }
 
   const resolvedProfileName = profileName ?? firstArg
@@ -61,6 +94,7 @@ let args
 
 try {
   args = resolveArgs(rawArgs)
+  if (shouldAppendPrompt()) args = appendSystemPrompt(args, readPrompt())
 } catch (error) {
   console.error(`[my-pi] ${error.message}`)
   process.exit(1)
