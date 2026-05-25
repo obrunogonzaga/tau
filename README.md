@@ -19,7 +19,17 @@ This repo stores my customized version of `pi` CLI (configs, extensions, prompts
 3. Start with wrapper:
    - `npm run my-pi`
 
+### Wrapper knobs
+
+- `MY_PI_SETTINGS_PATH`: path to a custom settings file (defaults to `~/.pi/agent/settings.json`).
+- `MY_PI_BANNER`: custom banner text (set to `0` to disable).
+- Logs: minimal startup logs are written to `<config-dir>/my-pi/logs/pi-YYYY-MM-DD.log`.
+
+Examples:
+
+- `MY_PI_SETTINGS_PATH=./profiles/dev.json npm run my-pi`
+- `MY_PI_BANNER=my-ops-pi npm run my-pi`
+
 ## Versioning
 
 This repo uses Git + GitHub. Commits should follow conventional commits and branch names `type/description`.
-
