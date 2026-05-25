@@ -153,6 +153,23 @@ test('myPi_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
   ]))
 })
 
+test('myPi_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
+  const record = runWrapper(['review', '--profile=deep', 'review diff'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'xhigh',
+    '--tools',
+    'read,grep,find,ls,bash',
+    '-p',
+    'review diff',
+  ]))
+})
+
 test('myPi_planAlias_usesPlanningArgs', () => {
   const record = runWrapper(['plan', 'design milestone'])
 
@@ -266,6 +283,20 @@ test('myPi_debugAlias_usesDebugArgs', () => {
 
 test('myPi_profileFlag_usesProfile', () => {
   const record = runWrapper(['--profile', 'fast', 'quick task'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    'quick task',
+  ]))
+})
+
+test('myPi_equalsProfileFlag_usesProfile', () => {
+  const record = runWrapper(['--profile=fast', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',

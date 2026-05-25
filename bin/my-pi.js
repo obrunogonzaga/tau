@@ -49,18 +49,23 @@ const aliasProfiles = {
 }
 
 const extractProfileAt = (args, profileIndex) => {
-  const profileName = args[profileIndex + 1]
+  const profileArg = args[profileIndex]
+  const hasEqualsValue = profileArg.startsWith('--profile=')
+  const profileName = hasEqualsValue ? profileArg.slice('--profile='.length) : args[profileIndex + 1]
   if (!profileName) throw new Error('Missing value for --profile')
   if (!profiles[profileName]) throw new Error(`Unknown profile: ${profileName}`)
 
-  const cleanArgs = args.filter((_, index) => index !== profileIndex && index !== profileIndex + 1)
+  const cleanArgs = args.filter((_, index) => {
+    if (index === profileIndex) return false
+    return hasEqualsValue || index !== profileIndex + 1
+  })
 
   return { args: cleanArgs, profileName }
 }
 
 const extractProfile = (args) => {
-  if (args[0] === '--profile') return extractProfileAt(args, 0)
-  if (aliasProfiles[args[0]] && args[1] === '--profile') return extractProfileAt(args, 1)
+  if (args[0] === '--profile' || args[0]?.startsWith('--profile=')) return extractProfileAt(args, 0)
+  if (aliasProfiles[args[0]] && (args[1] === '--profile' || args[1]?.startsWith('--profile='))) return extractProfileAt(args, 1)
 
   return { args, profileName: null }
 }
