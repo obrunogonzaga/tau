@@ -29,16 +29,16 @@ Goal:
 
 ## Milestone 2: Safer tool modes
 
-- [ ] MYPI-5 Make review read-only
-- [ ] MYPI-6 Add debug mode
-- [ ] MYPI-7 Add ship mode
-- [ ] MYPI-8 Test tool policies
+- [x] MYPI-5 Make review read-only
+- [x] MYPI-6 Add debug mode
+- [x] MYPI-7 Add ship mode
+- [x] MYPI-8 Test tool policies
 
 ## Milestone 3: Model routing
 
-- [ ] MYPI-9 Add model cycling presets
-- [ ] MYPI-10 Add router profile
-- [ ] MYPI-11 Document model strategy
+- [x] MYPI-9 Add model cycling presets
+- [x] MYPI-10 Add router profile
+- [x] MYPI-11 Document model strategy
 
 ## Milestone 4: Session workflow
 

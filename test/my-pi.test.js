@@ -9,8 +9,16 @@ const repoDir = path.resolve(import.meta.dirname, '..')
 const wrapperPath = path.join(repoDir, 'bin', 'my-pi.js')
 const promptPath = path.join(repoDir, 'prompts', 'system-prompt.md')
 const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim()
+const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,github-copilot/gpt-5.5:medium,openai-codex/gpt-5.5:xhigh'
 
 const withSystemPrompt = (args) => ['--append-system-prompt', systemPrompt, ...args]
+
+const assertToolList = (record, expectedTools) => {
+  const toolIndex = record.args.indexOf('--tools')
+
+  assert.notEqual(toolIndex, -1)
+  assert.equal(record.args[toolIndex + 1], expectedTools)
+}
 
 const runWrapperResult = (args, env = {}) => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-'))
@@ -99,6 +107,22 @@ test('myPi_deepProfile_prependsOpenAiCodexArgs', () => {
   ]))
 })
 
+test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
+  const record = runWrapper(['router', 'route this'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'github-copilot',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'medium',
+    '--models',
+    dailyModels,
+    'route this',
+  ]))
+})
+
 test('myPi_askAlias_usesPrintMode', () => {
   const record = runWrapper(['ask', 'quick question'])
 
@@ -130,10 +154,11 @@ test('myPi_reviewAlias_usesReadOnlyPrintMode', () => {
     '--thinking',
     'medium',
     '--tools',
-    'read,grep,find,ls,bash',
+    'read,grep,find,ls',
     '-p',
     'review diff',
   ]))
+  assertToolList(record, 'read,grep,find,ls')
 })
 
 test('myPi_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
@@ -147,10 +172,11 @@ test('myPi_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
     '--thinking',
     'xhigh',
     '--tools',
-    'read,grep,find,ls,bash',
+    'read,grep,find,ls',
     '-p',
     'review diff',
   ]))
+  assertToolList(record, 'read,grep,find,ls')
 })
 
 test('myPi_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
@@ -164,10 +190,11 @@ test('myPi_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
     '--thinking',
     'xhigh',
     '--tools',
-    'read,grep,find,ls,bash',
+    'read,grep,find,ls',
     '-p',
     'review diff',
   ]))
+  assertToolList(record, 'read,grep,find,ls')
 })
 
 test('myPi_planAlias_usesPlanningArgs', () => {
@@ -279,6 +306,57 @@ test('myPi_debugAlias_usesDebugArgs', () => {
     'Investigate first. Reproduce, isolate evidence, then suggest the smallest fix.',
     'repro failure',
   ]))
+  assertToolList(record, 'read,grep,find,ls,bash')
+})
+
+test('myPi_shipAlias_usesWorkProfile', () => {
+  const record = runWrapper(['ship', 'implement feature'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'github-copilot',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'medium',
+    '--append-system-prompt',
+    'Implement explicitly. Edit, test, document, and verify before reporting done.',
+    'implement feature',
+  ]))
+})
+
+test('myPi_shipAliasWithDeepProfile_usesDeepProfile', () => {
+  const record = runWrapper(['ship', '--profile', 'deep', 'hard implementation'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'xhigh',
+    '--append-system-prompt',
+    'Implement explicitly. Edit, test, document, and verify before reporting done.',
+    'hard implementation',
+  ]))
+})
+
+test('myPi_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
+  const record = runWrapper(['ship', '--profile', 'router', 'uncertain implementation'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'github-copilot',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'medium',
+    '--models',
+    dailyModels,
+    '--append-system-prompt',
+    'Implement explicitly. Edit, test, document, and verify before reporting done.',
+    'uncertain implementation',
+  ]))
 })
 
 test('myPi_profileFlag_usesProfile', () => {
@@ -291,6 +369,22 @@ test('myPi_profileFlag_usesProfile', () => {
     'gpt-5.3-codex-spark',
     '--thinking',
     'low',
+    'quick task',
+  ]))
+})
+
+test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
+  const record = runWrapper(['--profile', 'router', 'quick task'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'github-copilot',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'medium',
+    '--models',
+    dailyModels,
     'quick task',
   ]))
 })
@@ -320,7 +414,7 @@ test('myPi_profileTextAfterPromptStart_preservesPromptText', () => {
     '--thinking',
     'medium',
     '--tools',
-    'read,grep,find,ls,bash',
+    'read,grep,find,ls',
     '-p',
     'check',
     '--profile',

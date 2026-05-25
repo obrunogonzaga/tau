@@ -6,10 +6,35 @@ import { spawn } from 'node:child_process'
 
 const rawArgs = process.argv.slice(2)
 
+const approvedModels = {
+  deep: { id: 'openai-codex/gpt-5.5', thinking: 'xhigh' },
+  fast: { id: 'openai-codex/gpt-5.3-codex-spark', thinking: 'low' },
+  work: { id: 'github-copilot/gpt-5.5', thinking: 'medium' },
+}
+
+const dailyModels = ['fast', 'work', 'deep']
+
+const splitModelId = (modelId) => {
+  const [provider, model] = modelId.split('/')
+
+  return { model, provider }
+}
+
+const modelPattern = (modelConfig) => `${modelConfig.id}:${modelConfig.thinking}`
+
+const profileArgs = (modelConfig) => {
+  const { model, provider } = splitModelId(modelConfig.id)
+
+  return ['--provider', provider, '--model', model, '--thinking', modelConfig.thinking]
+}
+
+const modelCyclingArgs = () => ['--models', dailyModels.map((name) => modelPattern(approvedModels[name])).join(',')]
+
 const profiles = {
-  deep: ['--provider', 'openai-codex', '--model', 'gpt-5.5', '--thinking', 'xhigh'],
-  fast: ['--provider', 'openai-codex', '--model', 'gpt-5.3-codex-spark', '--thinking', 'low'],
-  work: ['--provider', 'github-copilot', '--model', 'gpt-5.5', '--thinking', 'medium'],
+  deep: profileArgs(approvedModels.deep),
+  fast: profileArgs(approvedModels.fast),
+  router: [...profileArgs(approvedModels.work), ...modelCyclingArgs()],
+  work: profileArgs(approvedModels.work),
 }
 
 const READ_TOOLS = 'read,grep,find,ls'
@@ -22,6 +47,7 @@ const taskPrompts = {
   grill: 'Critique the plan hard. Surface risks, weak assumptions, missing tests, and open questions.',
   plan: 'Plan first. Do not implement unless explicitly asked. End with unresolved questions.',
   pr: 'Prepare concise PR text with summary, tests, risks, and checklist.',
+  ship: 'Implement explicitly. Edit, test, document, and verify before reporting done.',
 }
 
 const aliasExtras = {
@@ -33,7 +59,8 @@ const aliasExtras = {
   grill: ['--tools', READ_TOOLS, '-p'],
   plan: ['--tools', READ_TOOLS, '-p'],
   pr: ['--tools', DEBUG_TOOLS, '-p'],
-  review: ['--tools', 'read,grep,find,ls,bash', '-p'],
+  review: ['--tools', READ_TOOLS, '-p'],
+  ship: [],
 }
 
 const aliasProfiles = {
@@ -46,6 +73,7 @@ const aliasProfiles = {
   plan: profiles.work,
   pr: profiles.work,
   review: profiles.work,
+  ship: profiles.work,
 }
 
 const extractProfileAt = (args, profileIndex) => {
