@@ -10,7 +10,10 @@
 - Add wrapper logs under `<config-dir>/my-pi/logs/`.
 - Add `fast` profile for `openai-codex/gpt-5.3-codex-spark`.
 - Add `work` profile for `github-copilot/gpt-5.5`.
-- Add `deep` profile for `openai/gpt-5.5`.
+- Add `deep` profile for `openai-codex/gpt-5.5`.
+- Add `ask`, `code`, and `review` command aliases.
+- Add `--profile` override for aliases and direct commands.
+- Add validation for missing or unknown profile names.
 - Add Node test coverage for profile expansion.
 - Add isolated `my-pi` session directory.
 

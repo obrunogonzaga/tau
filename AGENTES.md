@@ -36,5 +36,9 @@ my-pi fast "summarize this repo"
 - `fast`: quick coding profile.
 - `work`: daily coding profile.
 - `deep`: hard debugging and design profile.
+- `ask`: quick print alias.
+- `code`: daily coding alias.
+- `review`: read-only print review alias.
 - Prefer adding profiles through a single profile map.
-- Add or update tests for each profile.
+- Add or update tests for each profile or alias.
+- Support `--profile` overrides when alias behavior needs another model.

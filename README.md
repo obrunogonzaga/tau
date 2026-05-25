@@ -24,6 +24,12 @@ This repo stores my customized version of `pi` CLI (configs, extensions, prompts
    - `my-pi work "implement this"`
 6. Start with deep profile:
    - `my-pi deep "debug this hard bug"`
+7. Quick ask:
+   - `my-pi ask "what is this repo?"`
+8. Coding mode:
+   - `my-pi code "implement this"`
+9. Review mode:
+   - `my-pi review "review current changes"`
 
 ## Profiles
 
@@ -31,7 +37,20 @@ A profile is a named preset that expands to pi flags.
 
 - `fast`: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
 - `work`: `--provider github-copilot --model gpt-5.5 --thinking medium`
-- `deep`: `--provider openai --model gpt-5.5 --thinking xhigh`
+- `deep`: `--provider openai-codex --model gpt-5.5 --thinking xhigh`
+
+## Aliases
+
+- `ask`: `-p`
+- `code`: same as `work`
+- `review`: same as `work`, plus `--tools read,grep,find,ls,bash -p`
+
+Aliases can use a profile override:
+
+- `my-pi review --profile deep "review diff"`
+- `my-pi --profile fast "quick task"`
+
+`--profile` is only parsed at the start or right after an alias.
 
 ### Wrapper knobs
 

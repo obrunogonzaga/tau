@@ -7,18 +7,64 @@ import { spawn } from 'node:child_process'
 const rawArgs = process.argv.slice(2)
 
 const profiles = {
-  deep: ['--provider', 'openai', '--model', 'gpt-5.5', '--thinking', 'xhigh'],
+  deep: ['--provider', 'openai-codex', '--model', 'gpt-5.5', '--thinking', 'xhigh'],
   fast: ['--provider', 'openai-codex', '--model', 'gpt-5.3-codex-spark', '--thinking', 'low'],
   work: ['--provider', 'github-copilot', '--model', 'gpt-5.5', '--thinking', 'medium'],
 }
 
-const resolveArgs = ([firstArg, ...restArgs]) => {
-  if (!profiles[firstArg]) return [firstArg, ...restArgs].filter((arg) => arg !== undefined)
-
-  return [...profiles[firstArg], ...restArgs]
+const aliasExtras = {
+  ask: ['-p'],
+  code: [],
+  review: ['--tools', 'read,grep,find,ls,bash', '-p'],
 }
 
-const args = resolveArgs(rawArgs)
+const aliasProfiles = {
+  ask: [],
+  code: profiles.work,
+  review: profiles.work,
+}
+
+const extractProfileAt = (args, profileIndex) => {
+  const profileName = args[profileIndex + 1]
+  if (!profileName) throw new Error('Missing value for --profile')
+  if (!profiles[profileName]) throw new Error(`Unknown profile: ${profileName}`)
+
+  const cleanArgs = args.filter((_, index) => index !== profileIndex && index !== profileIndex + 1)
+
+  return { args: cleanArgs, profileName }
+}
+
+const extractProfile = (args) => {
+  if (args[0] === '--profile') return extractProfileAt(args, 0)
+  if (aliasProfiles[args[0]] && args[1] === '--profile') return extractProfileAt(args, 1)
+
+  return { args, profileName: null }
+}
+
+const resolveArgs = (rawInputArgs) => {
+  const { args: inputArgs, profileName } = extractProfile(rawInputArgs)
+  const [firstArg, ...restArgs] = inputArgs
+
+  if (aliasProfiles[firstArg]) {
+    const profileArgs = profiles[profileName] ?? aliasProfiles[firstArg]
+
+    return [...profileArgs, ...aliasExtras[firstArg], ...restArgs]
+  }
+
+  const resolvedProfileName = profileName ?? firstArg
+  if (!profiles[resolvedProfileName]) return [firstArg, ...restArgs].filter((arg) => arg !== undefined)
+
+  return [...profiles[resolvedProfileName], ...(profileName ? inputArgs : restArgs)]
+}
+
+let args
+
+try {
+  args = resolveArgs(rawArgs)
+} catch (error) {
+  console.error(`[my-pi] ${error.message}`)
+  process.exit(1)
+}
 
 const HOME_DIR = os.homedir()
 const defaultSettingsPath = path.join(HOME_DIR, '.pi', 'agent', 'settings.json')
