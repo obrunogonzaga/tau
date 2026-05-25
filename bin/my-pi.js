@@ -4,7 +4,19 @@ import os from 'node:os'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
 
-const args = process.argv.slice(2)
+const rawArgs = process.argv.slice(2)
+
+const profiles = {
+  fast: ['--provider', 'openai-codex', '--model', 'gpt-5.3-codex-spark', '--thinking', 'low'],
+}
+
+const resolveArgs = ([firstArg, ...restArgs]) => {
+  if (!profiles[firstArg]) return [firstArg, ...restArgs].filter((arg) => arg !== undefined)
+
+  return [...profiles[firstArg], ...restArgs]
+}
+
+const args = resolveArgs(rawArgs)
 
 const HOME_DIR = os.homedir()
 const defaultSettingsPath = path.join(HOME_DIR, '.pi', 'agent', 'settings.json')

@@ -10,6 +10,7 @@
   "scripts": {
     "pi": "pi",
     "my-pi": "node ./bin/my-pi.js",
-    "setup:pi": "bash ./scripts/setup-pi-settings.sh"
+    "setup:pi": "bash ./scripts/setup-pi-settings.sh",
+    "test": "node --test"
   }
 }

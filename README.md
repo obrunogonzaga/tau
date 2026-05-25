@@ -18,6 +18,14 @@ This repo stores my customized version of `pi` CLI (configs, extensions, prompts
    - `npm run pi`
 3. Start with wrapper:
    - `npm run my-pi`
+4. Start with fast profile:
+   - `my-pi fast "summarize this repo"`
+
+## Profiles
+
+A profile is a named preset that expands to pi flags.
+
+- `fast`: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
 
 ### Wrapper knobs
 
