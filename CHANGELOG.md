@@ -33,3 +33,5 @@
 - Document quick start, wrapper knobs, profile usage, and task aliases.
 - Document model strategy for `fast`, `work`, `deep`, and `router`.
 - Make `review` read-only with `read,grep,find,ls`.
+- Make `openai-codex/gpt-5.3-codex-spark:low` the default for direct commands, aliases, and `router`.
+- Keep `github-copilot` limited to explicit `work` profile usage.

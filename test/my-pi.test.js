@@ -9,7 +9,7 @@ const repoDir = path.resolve(import.meta.dirname, '..')
 const wrapperPath = path.join(repoDir, 'bin', 'my-pi.js')
 const promptPath = path.join(repoDir, 'prompts', 'system-prompt.md')
 const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim()
-const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,github-copilot/gpt-5.5:medium,openai-codex/gpt-5.5:xhigh'
+const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,openai-codex/gpt-5.5:xhigh'
 
 const withSystemPrompt = (args) => ['--append-system-prompt', systemPrompt, ...args]
 
@@ -112,11 +112,11 @@ test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--models',
     dailyModels,
     'route this',
@@ -126,19 +126,28 @@ test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
 test('myPi_askAlias_usesPrintMode', () => {
   const record = runWrapper(['ask', 'quick question'])
 
-  assert.deepEqual(record.args, withSystemPrompt(['-p', 'quick question']))
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-p',
+    'quick question',
+  ]))
 })
 
-test('myPi_codeAlias_usesWorkProfile', () => {
+test('myPi_codeAlias_usesDefaultFastProfile', () => {
   const record = runWrapper(['code', 'implement feature'])
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     'implement feature',
   ]))
 })
@@ -148,11 +157,11 @@ test('myPi_reviewAlias_usesReadOnlyPrintMode', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls',
     '-p',
@@ -202,11 +211,11 @@ test('myPi_planAlias_usesPlanningArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls',
     '-p',
@@ -240,11 +249,11 @@ test('myPi_fixAlias_usesFocusedWorkArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--append-system-prompt',
     'Fix narrowly. Inspect real state, edit only needed files, test before reporting done.',
     'bug',
@@ -256,11 +265,11 @@ test('myPi_commitAlias_usesCommitArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls,bash',
     '-p',
@@ -275,11 +284,11 @@ test('myPi_prAlias_usesPrArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls,bash',
     '-p',
@@ -309,16 +318,16 @@ test('myPi_debugAlias_usesDebugArgs', () => {
   assertToolList(record, 'read,grep,find,ls,bash')
 })
 
-test('myPi_shipAlias_usesWorkProfile', () => {
+test('myPi_shipAlias_usesDefaultFastProfile', () => {
   const record = runWrapper(['ship', 'implement feature'])
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--append-system-prompt',
     'Implement explicitly. Edit, test, document, and verify before reporting done.',
     'implement feature',
@@ -346,11 +355,11 @@ test('myPi_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--models',
     dailyModels,
     '--append-system-prompt',
@@ -373,8 +382,8 @@ test('myPi_profileFlag_usesProfile', () => {
   ]))
 })
 
-test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
-  const record = runWrapper(['--profile', 'router', 'quick task'])
+test('myPi_workProfileFlag_usesCopilotOnlyWhenForced', () => {
+  const record = runWrapper(['--profile', 'work', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
@@ -383,6 +392,20 @@ test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
     'gpt-5.5',
     '--thinking',
     'medium',
+    'quick task',
+  ]))
+})
+
+test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
+  const record = runWrapper(['--profile', 'router', 'quick task'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
     '--models',
     dailyModels,
     'quick task',
@@ -408,11 +431,11 @@ test('myPi_profileTextAfterPromptStart_preservesPromptText', () => {
 
   assert.deepEqual(record.args, withSystemPrompt([
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls',
     '-p',
@@ -425,14 +448,30 @@ test('myPi_profileTextAfterPromptStart_preservesPromptText', () => {
 test('myPi_defaultArgs_appendsSystemPrompt', () => {
   const record = runWrapper(['hello'])
 
-  assert.deepEqual(record.args, withSystemPrompt(['hello']))
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    'hello',
+  ]))
 })
 
 test('myPi_promptOptOut_skipsSystemPrompt', () => {
   const { record, result } = runWrapperResult(['hello'], { MY_PI_NO_PROMPT: '1' })
 
   assert.equal(result.status, 0)
-  assert.deepEqual(record.args, ['hello'])
+  assert.deepEqual(record.args, [
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    'hello',
+  ])
 })
 
 test('myPi_promptOptOut_skipsTaskPrompt', () => {
@@ -441,11 +480,11 @@ test('myPi_promptOptOut_skipsTaskPrompt', () => {
   assert.equal(result.status, 0)
   assert.deepEqual(record.args, [
     '--provider',
-    'github-copilot',
+    'openai-codex',
     '--model',
-    'gpt-5.5',
+    'gpt-5.3-codex-spark',
     '--thinking',
-    'medium',
+    'low',
     '--tools',
     'read,grep,find,ls',
     '-p',

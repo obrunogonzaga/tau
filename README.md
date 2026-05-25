@@ -16,7 +16,7 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
    - `npm i -g @earendil-works/pi-coding-agent`
 2. Start pi:
    - `npm run pi`
-3. Start with wrapper:
+3. Start with default wrapper:
    - `npm run my-pi`
 4. Start with fast profile:
    - `my-pi fast "summarize this repo"`
@@ -31,31 +31,31 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
 
 A profile is a named preset that expands to pi flags.
 
-- `fast`: quick cheap answers: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
-- `work`: normal coding: `--provider github-copilot --model gpt-5.5 --thinking medium`
+- `fast`: default quick answers: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
+- `work`: opt-in Copilot: `--provider github-copilot --model gpt-5.5 --thinking medium`
 - `deep`: hard debugging/design: `--provider openai-codex --model gpt-5.5 --thinking xhigh`
-- `router`: uncertain or long sessions: starts as `work`, adds `--models openai-codex/gpt-5.3-codex-spark:low,github-copilot/gpt-5.5:medium,openai-codex/gpt-5.5:xhigh`
+- `router`: uncertain or long sessions: starts as `fast`, adds `--models openai-codex/gpt-5.3-codex-spark:low,openai-codex/gpt-5.5:xhigh`
 
 ## Model strategy
 
 - Use `fast` for cheap questions, summaries, and quick checks.
-- Use `work` for normal implementation and repo work.
+- Use `work` only when explicitly choosing GitHub Copilot.
 - Use `deep` for hard bugs, design review, and high-stakes reasoning.
 - Use `router` when task shape is unclear or model switching via Ctrl+P may help.
-- Provider assumptions: `fast`/`deep` use `openai-codex`; `work` uses `github-copilot`; `router` cycles only the approved daily list above.
+- Provider assumptions: default uses `openai-codex/gpt-5.3-codex-spark:low`; `work` is the only Copilot profile; `router` cycles only OpenAI Codex models.
 
 ## Aliases
 
 - `ask`: `-p`
-- `code`: same as `work`
-- `review`: same as `work`, plus `--tools read,grep,find,ls -p`
-- `plan`: same as `work`, plus read tools, print mode, planning prompt
+- `code`: same as `fast`
+- `review`: same as `fast`, plus `--tools read,grep,find,ls -p`
+- `plan`: same as `fast`, plus read tools, print mode, planning prompt
 - `grill`: same as `deep`, plus read tools, print mode, critique prompt
-- `fix`: same as `work`, plus focused fix prompt
-- `commit`: same as `work`, plus read/bash tools, print mode, commit prompt
-- `pr`: same as `work`, plus read/bash tools, print mode, PR prompt
+- `fix`: same as `fast`, plus focused fix prompt
+- `commit`: same as `fast`, plus read/bash tools, print mode, commit prompt
+- `pr`: same as `fast`, plus read/bash tools, print mode, PR prompt
 - `debug`: same as `deep`, plus `--tools read,grep,find,ls,bash -p`
-- `ship`: same as `work`, plus implementation prompt and full tool access
+- `ship`: same as `fast`, plus implementation prompt and full tool access
 
 Examples:
 
@@ -76,10 +76,20 @@ Aliases can use a profile override:
 - `my-pi ship --profile deep "ship harder change"`
 - `my-pi ship --profile router "ship with model cycling"`
 - `my-pi plan --profile fast "quick plan"`
+- `my-pi ship --profile work "force Copilot"`
 - `my-pi --profile fast "quick task"`
 - `my-pi --profile router "quick task with model cycling"`
 
 `--profile` is only parsed at the start or right after an alias.
+
+## Extensions
+
+- `pure-focus`: hides header, footer, working row, and status labels.
+- Set `quietStartup: true` in settings to hide loaded resource lists too.
+
+Example:
+
+- `my-pi router -e extensions/pure-focus.ts "focus"`
 
 ### Wrapper knobs
 

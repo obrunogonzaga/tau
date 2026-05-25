@@ -12,7 +12,7 @@ const approvedModels = {
   work: { id: 'github-copilot/gpt-5.5', thinking: 'medium' },
 }
 
-const dailyModels = ['fast', 'work', 'deep']
+const dailyModels = ['fast', 'deep']
 
 const splitModelId = (modelId) => {
   const [provider, model] = modelId.split('/')
@@ -33,9 +33,11 @@ const modelCyclingArgs = () => ['--models', dailyModels.map((name) => modelPatte
 const profiles = {
   deep: profileArgs(approvedModels.deep),
   fast: profileArgs(approvedModels.fast),
-  router: [...profileArgs(approvedModels.work), ...modelCyclingArgs()],
+  router: [...profileArgs(approvedModels.fast), ...modelCyclingArgs()],
   work: profileArgs(approvedModels.work),
 }
+
+const DEFAULT_PROFILE = profiles.fast
 
 const READ_TOOLS = 'read,grep,find,ls'
 const DEBUG_TOOLS = `${READ_TOOLS},bash`
@@ -64,16 +66,16 @@ const aliasExtras = {
 }
 
 const aliasProfiles = {
-  ask: [],
-  code: profiles.work,
-  commit: profiles.work,
+  ask: DEFAULT_PROFILE,
+  code: DEFAULT_PROFILE,
+  commit: DEFAULT_PROFILE,
   debug: profiles.deep,
-  fix: profiles.work,
+  fix: DEFAULT_PROFILE,
   grill: profiles.deep,
-  plan: profiles.work,
-  pr: profiles.work,
-  review: profiles.work,
-  ship: profiles.work,
+  plan: DEFAULT_PROFILE,
+  pr: DEFAULT_PROFILE,
+  review: DEFAULT_PROFILE,
+  ship: DEFAULT_PROFILE,
 }
 
 const extractProfileAt = (args, profileIndex) => {
@@ -118,7 +120,7 @@ const resolveArgs = (rawInputArgs) => {
   }
 
   const resolvedProfileName = profileName ?? firstArg
-  if (!profiles[resolvedProfileName]) return [firstArg, ...restArgs].filter((arg) => arg !== undefined)
+  if (!profiles[resolvedProfileName]) return [...DEFAULT_PROFILE, firstArg, ...restArgs].filter((arg) => arg !== undefined)
 
   return [...profiles[resolvedProfileName], ...(profileName ? inputArgs : restArgs)]
 }
