@@ -8,7 +8,9 @@ import test from 'node:test'
 const repoDir = path.resolve(import.meta.dirname, '..')
 const wrapperPath = path.join(repoDir, 'bin', 'my-pi.js')
 const promptPath = path.join(repoDir, 'prompts', 'system-prompt.md')
+const configPath = path.join(repoDir, 'config', 'my-pi.config.json')
 const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim()
+const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,openai-codex/gpt-5.5:xhigh'
 
 const withSystemPrompt = (args) => ['--append-system-prompt', systemPrompt, ...args]
@@ -53,6 +55,40 @@ fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
   const record = fs.existsSync(recordPath) ? JSON.parse(fs.readFileSync(recordPath, 'utf8')) : null
 
   return { record, result }
+}
+
+const writeExecutable = (filePath, content) => {
+  fs.writeFileSync(filePath, content, { mode: 0o755 })
+}
+
+const runDoctorResult = ({ env = {}, settings = true, pi = true, tmux = null } = {}) => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-doctor-'))
+  const binDir = path.join(tempDir, 'bin')
+  const homeDir = path.join(tempDir, 'home')
+  const settingsPath = path.join(homeDir, '.pi', 'agent', 'settings.json')
+
+  fs.mkdirSync(binDir)
+  if (settings) {
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true })
+    fs.writeFileSync(settingsPath, '{}')
+  }
+  if (pi) {
+    writeExecutable(path.join(binDir, 'pi'), '#!/bin/sh\necho "pi 1.0.0"\n')
+  }
+  if (tmux !== null) {
+    writeExecutable(path.join(binDir, 'tmux'), `#!/bin/sh\necho ${JSON.stringify(tmux)}\n`)
+  }
+
+  return spawnSync(process.execPath, [wrapperPath, 'doctor'], {
+    env: {
+      ...process.env,
+      HOME: homeDir,
+      MY_PI_BANNER: '0',
+      PATH: binDir,
+      ...env,
+    },
+    encoding: 'utf8',
+  })
 }
 
 const runWrapper = (args) => {
@@ -121,6 +157,26 @@ test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
     dailyModels,
     'route this',
   ]))
+})
+
+test('myPi_configFile_containsProfilesAndAliases', () => {
+  assert.deepEqual(Object.keys(config.profiles).sort(), ['deep', 'fast', 'router', 'work'])
+  assert.deepEqual(Object.keys(config.aliases).sort(), [
+    'ask',
+    'code',
+    'commit',
+    'continue',
+    'debug',
+    'export',
+    'fix',
+    'fork',
+    'grill',
+    'plan',
+    'pr',
+    'resume',
+    'review',
+    'ship',
+  ])
 })
 
 test('myPi_askAlias_usesPrintMode', () => {
@@ -610,4 +666,51 @@ test('myPi_missingProfileValue_failsFast', () => {
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /Missing value for --profile/)
+})
+
+test('myPi_invalidConfig_failsFastWithClearError', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-config-'))
+  const brokenConfigPath = path.join(tempDir, 'config.json')
+  fs.writeFileSync(brokenConfigPath, '{"profiles":{}}')
+
+  const { result } = runWrapperResult(['hello'], { MY_PI_CONFIG_PATH: brokenConfigPath })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /Invalid config/)
+})
+
+test('myPi_doctor_reportsConcisePassingChecks', () => {
+  const result = runDoctorResult({
+    env: {
+      OPENAI_API_KEY: 'secret-openai',
+      GITHUB_TOKEN: 'secret-github',
+    },
+  })
+
+  assert.equal(result.status, 0)
+  assert.match(result.stdout, /\[ok\] node/)
+  assert.match(result.stdout, /\[ok\] pi/)
+  assert.match(result.stdout, /\[ok\] settings/)
+  assert.match(result.stdout, /\[ok\] sessions/)
+  assert.match(result.stdout, /\[ok\] key openai-codex: present/)
+  assert.match(result.stdout, /\[ok\] key github-copilot: present/)
+  assert.doesNotMatch(result.stdout, /secret-openai|secret-github/)
+})
+
+test('myPi_doctor_failsWhenRequiredCheckFails', () => {
+  const result = runDoctorResult({ pi: false, settings: false })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stdout, /\[fail\] pi/)
+  assert.match(result.stdout, /\[fail\] settings/)
+})
+
+test('myPi_doctor_checksTmuxExtendedKeysInsideTmux', () => {
+  const result = runDoctorResult({
+    env: { TMUX: '/tmp/tmux' },
+    tmux: 'off',
+  })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stdout, /\[fail\] tmux extended-keys: off/)
 })

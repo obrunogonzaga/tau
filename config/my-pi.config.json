@@ -1,0 +1,91 @@
+{
+  "defaultProfile": "fast",
+  "providerKeys": {
+    "github-copilot": ["GITHUB_TOKEN", "GH_TOKEN"],
+    "openai-codex": ["OPENAI_API_KEY"]
+  },
+  "profiles": {
+    "deep": {
+      "id": "openai-codex/gpt-5.5",
+      "thinking": "xhigh"
+    },
+    "fast": {
+      "id": "openai-codex/gpt-5.3-codex-spark",
+      "thinking": "low"
+    },
+    "router": {
+      "id": "openai-codex/gpt-5.3-codex-spark",
+      "thinking": "low",
+      "models": ["fast", "deep"]
+    },
+    "work": {
+      "id": "github-copilot/gpt-5.5",
+      "thinking": "medium"
+    }
+  },
+  "aliases": {
+    "ask": {
+      "extras": ["-p"],
+      "profile": "fast"
+    },
+    "code": {
+      "extras": [],
+      "profile": "fast"
+    },
+    "commit": {
+      "extras": ["--tools", "read,grep,find,ls,bash", "-p"],
+      "profile": "fast",
+      "prompt": "Prepare concise conventional commit guidance. Inspect state before proposing text."
+    },
+    "continue": {
+      "extras": ["--continue"],
+      "profile": "fast"
+    },
+    "debug": {
+      "extras": ["--tools", "read,grep,find,ls,bash", "-p"],
+      "profile": "deep",
+      "prompt": "Investigate first. Reproduce, isolate evidence, then suggest the smallest fix."
+    },
+    "export": {
+      "extras": ["--export"],
+      "profile": "fast"
+    },
+    "fix": {
+      "extras": [],
+      "profile": "fast",
+      "prompt": "Fix narrowly. Inspect real state, edit only needed files, test before reporting done."
+    },
+    "fork": {
+      "extras": ["--fork"],
+      "profile": "fast"
+    },
+    "grill": {
+      "extras": ["--tools", "read,grep,find,ls", "-p"],
+      "profile": "deep",
+      "prompt": "Critique the plan hard. Surface risks, weak assumptions, missing tests, and open questions."
+    },
+    "plan": {
+      "extras": ["--tools", "read,grep,find,ls", "-p"],
+      "profile": "fast",
+      "prompt": "Plan first. Do not implement unless explicitly asked. End with unresolved questions."
+    },
+    "pr": {
+      "extras": ["--tools", "read,grep,find,ls,bash", "-p"],
+      "profile": "fast",
+      "prompt": "Prepare concise PR text with summary, tests, risks, and checklist."
+    },
+    "resume": {
+      "extras": ["--resume"],
+      "profile": "fast"
+    },
+    "review": {
+      "extras": ["--tools", "read,grep,find,ls", "-p"],
+      "profile": "fast"
+    },
+    "ship": {
+      "extras": [],
+      "profile": "fast",
+      "prompt": "Implement explicitly. Edit, test, document, and verify before reporting done."
+    }
+  }
+}

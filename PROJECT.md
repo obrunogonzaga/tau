@@ -49,10 +49,10 @@ Goal:
 
 ## Milestone 5: Config and health
 
-- [ ] MYPI-16 Move profiles to config file
-- [ ] MYPI-17 Move aliases to config file
-- [ ] MYPI-18 Add doctor command
-- [ ] MYPI-19 Check Node, Pi, tmux, settings, sessions
+- [x] MYPI-16 Move profiles to config file
+- [x] MYPI-17 Move aliases to config file
+- [x] MYPI-18 Add doctor command
+- [x] MYPI-19 Check Node, Pi, tmux, settings, sessions
 
 ## Milestone 6: Release hygiene
 

@@ -8,6 +8,7 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
 - `prompts/`     shared prompt templates
 - `scripts/`     helper scripts
 - `agent-settings.example.json` template for ~/.pi/agent/settings.json
+- `config/my-pi.config.json` versioned profiles, aliases, and doctor key checks
 - `bin/my-pi.js` wrapper/router to run current installed pi
 
 ## Quick start
@@ -26,10 +27,14 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
    - `my-pi deep "debug this hard bug"`
 7. Start with router profile:
    - `my-pi router "work where model may change"`
+8. Check local setup:
+   - `my-pi doctor`
 
 ## Profiles
 
 A profile is a named preset that expands to pi flags.
+
+Profiles live in `config/my-pi.config.json`.
 
 - `fast`: default quick answers: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
 - `work`: opt-in Copilot: `--provider github-copilot --model gpt-5.5 --thinking medium`
@@ -45,6 +50,8 @@ A profile is a named preset that expands to pi flags.
 - Provider assumptions: default uses `openai-codex/gpt-5.3-codex-spark:low`; `work` is the only Copilot profile; `router` cycles only OpenAI Codex models.
 
 ## Aliases
+
+Aliases live in `config/my-pi.config.json`.
 
 - `ask`: `-p`
 - `code`: same as `fast`
@@ -98,6 +105,33 @@ Aliases can use a profile override:
 
 `--profile` is only parsed at the start or right after an alias.
 
+## Config
+
+Edit `config/my-pi.config.json` to change profiles, aliases, task prompts, and provider key names checked by `doctor`.
+
+- `defaultProfile`: fallback profile for direct commands and aliases.
+- `profiles`: named provider/model/thinking presets.
+- `profiles.router.models`: exact model cycling list.
+- `aliases`: command presets with profile, extra args, and optional prompt.
+- `providerKeys`: env var names checked by provider, values never printed.
+
+Use `MY_PI_CONFIG_PATH=./other-config.json my-pi ...` to test another config.
+
+Invalid config fails before `pi` starts.
+
+## Doctor
+
+`my-pi doctor` prints concise checks:
+
+- Node version >= 22.19
+- `pi --version`
+- tmux `extended-keys` when inside tmux
+- settings file exists
+- session directory is writable
+- provider keys present/missing, without values
+
+Required check failure exits non-zero. Missing provider keys are warnings.
+
 ## Extensions
 
 - `pure-focus`: hides header, footer, working row, and status labels.
@@ -110,6 +144,7 @@ Example:
 ### Wrapper knobs
 
 - `MY_PI_SETTINGS_PATH`: path to a custom settings file (defaults to `~/.pi/agent/settings.json`).
+- `MY_PI_CONFIG_PATH`: path to a custom wrapper config.
 - `MY_PI_BANNER`: custom banner text (set to `0` to disable).
 - `MY_PI_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
 - Logs: minimal startup logs are written to `<config-dir>/my-pi/logs/pi-YYYY-MM-DD.log`.
