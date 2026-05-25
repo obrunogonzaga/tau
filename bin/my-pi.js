@@ -7,7 +7,9 @@ import { spawn } from 'node:child_process'
 const rawArgs = process.argv.slice(2)
 
 const profiles = {
+  deep: ['--provider', 'openai', '--model', 'gpt-5.5', '--thinking', 'xhigh'],
   fast: ['--provider', 'openai-codex', '--model', 'gpt-5.3-codex-spark', '--thinking', 'low'],
+  work: ['--provider', 'github-copilot', '--model', 'gpt-5.5', '--thinking', 'medium'],
 }
 
 const resolveArgs = ([firstArg, ...restArgs]) => {
@@ -30,7 +32,7 @@ const resolveSettingsPath = (rawPath) => {
 const settingsPath = resolveSettingsPath(configuredPath)
 const fallbackPath = fs.existsSync(settingsPath) ? settingsPath : defaultSettingsPath
 const configDir = path.dirname(fallbackPath)
-const sessionDir = path.join(configDir, 'sessions')
+const sessionDir = path.join(HOME_DIR, '.pi', 'my-pi', 'sessions')
 
 if (configuredPath && !fs.existsSync(settingsPath)) {
   console.error(`[my-pi] MY_PI_SETTINGS_PATH not found: ${settingsPath}`)

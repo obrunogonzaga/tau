@@ -51,5 +51,89 @@ fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
     'hello',
   ])
   assert.equal(record.agentDir, path.join(os.homedir(), '.pi', 'agent'))
-  assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'agent', 'sessions'))
+  assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'my-pi', 'sessions'))
+})
+
+test('myPi_workProfile_prependsCopilotArgs', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-'))
+  const binDir = path.join(tempDir, 'bin')
+  const recordPath = path.join(tempDir, 'record.json')
+
+  fs.mkdirSync(binDir)
+  fs.writeFileSync(
+    path.join(binDir, 'pi'),
+    `#!/usr/bin/env node
+import fs from 'node:fs'
+fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
+  args: process.argv.slice(2)
+}))
+`,
+    { mode: 0o755 },
+  )
+
+  const result = spawnSync(process.execPath, [wrapperPath, 'work', 'ship it'], {
+    env: {
+      ...process.env,
+      MY_PI_BANNER: '0',
+      MY_PI_TEST_RECORD: recordPath,
+      PATH: `${binDir}:${process.env.PATH}`,
+    },
+    encoding: 'utf8',
+  })
+
+  assert.equal(result.status, 0)
+
+  const record = JSON.parse(fs.readFileSync(recordPath, 'utf8'))
+
+  assert.deepEqual(record.args, [
+    '--provider',
+    'github-copilot',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'medium',
+    'ship it',
+  ])
+})
+
+test('myPi_deepProfile_prependsOpenAiArgs', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-'))
+  const binDir = path.join(tempDir, 'bin')
+  const recordPath = path.join(tempDir, 'record.json')
+
+  fs.mkdirSync(binDir)
+  fs.writeFileSync(
+    path.join(binDir, 'pi'),
+    `#!/usr/bin/env node
+import fs from 'node:fs'
+fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
+  args: process.argv.slice(2)
+}))
+`,
+    { mode: 0o755 },
+  )
+
+  const result = spawnSync(process.execPath, [wrapperPath, 'deep', 'debug hard bug'], {
+    env: {
+      ...process.env,
+      MY_PI_BANNER: '0',
+      MY_PI_TEST_RECORD: recordPath,
+      PATH: `${binDir}:${process.env.PATH}`,
+    },
+    encoding: 'utf8',
+  })
+
+  assert.equal(result.status, 0)
+
+  const record = JSON.parse(fs.readFileSync(recordPath, 'utf8'))
+
+  assert.deepEqual(record.args, [
+    '--provider',
+    'openai',
+    '--model',
+    'gpt-5.5',
+    '--thinking',
+    'xhigh',
+    'debug hard bug',
+  ])
 })
