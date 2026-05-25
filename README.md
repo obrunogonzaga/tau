@@ -56,6 +56,10 @@ A profile is a named preset that expands to pi flags.
 - `pr`: same as `fast`, plus read/bash tools, print mode, PR prompt
 - `debug`: same as `deep`, plus `--tools read,grep,find,ls,bash -p`
 - `ship`: same as `fast`, plus implementation prompt and full tool access
+- `continue`: same as `fast`, plus `--continue`
+- `resume`: same as `fast`, plus `--resume`
+- `fork`: same as `fast`, plus `--fork`
+- `export`: same as `fast`, plus `--export`
 
 Examples:
 
@@ -69,6 +73,18 @@ Examples:
 - `my-pi pr "draft PR for current branch"`
 - `my-pi debug "reproduce failing npm test without editing files"`
 - `my-pi ship "implement M2"`
+- `my-pi continue "finish the previous task"`
+- `my-pi resume`
+- `my-pi resume "continue with this prompt"`
+- `my-pi fork session-123 "try another path"`
+- `my-pi export session-123 session.html`
+
+Session aliases:
+
+- `continue`: continue the latest session.
+- `resume`: choose or resume an existing session; extra prompt text is preserved.
+- `fork`: branch from a session id; args after the id are preserved.
+- `export`: export a session; optional output path is preserved.
 
 Aliases can use a profile override:
 

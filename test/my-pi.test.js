@@ -368,6 +368,112 @@ test('myPi_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
   ]))
 })
 
+test('myPi_continueAlias_forwardsContinueWithPrompt', () => {
+  const record = runWrapper(['continue', 'finish this'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--continue',
+    'finish this',
+  ]))
+})
+
+test('myPi_resumeAlias_forwardsResume', () => {
+  const record = runWrapper(['resume'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--resume',
+  ]))
+})
+
+test('myPi_resumeAlias_preservesPromptArgs', () => {
+  const record = runWrapper(['resume', 'continue from selection'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--resume',
+    'continue from selection',
+  ]))
+})
+
+test('myPi_forkAlias_forwardsForkSessionId', () => {
+  const record = runWrapper(['fork', 'session-123'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--fork',
+    'session-123',
+  ]))
+})
+
+test('myPi_forkAlias_preservesArgsAfterSessionId', () => {
+  const record = runWrapper(['fork', 'session-123', 'try another path'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--fork',
+    'session-123',
+    'try another path',
+  ]))
+})
+
+test('myPi_exportAlias_forwardsExportSessionId', () => {
+  const record = runWrapper(['export', 'session-123'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--export',
+    'session-123',
+  ]))
+})
+
+test('myPi_exportAlias_preservesOutputPath', () => {
+  const record = runWrapper(['export', 'session-123', 'session.html'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--export',
+    'session-123',
+    'session.html',
+  ]))
+})
+
 test('myPi_profileFlag_usesProfile', () => {
   const record = runWrapper(['--profile', 'fast', 'quick task'])
 

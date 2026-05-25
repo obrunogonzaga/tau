@@ -42,10 +42,10 @@ Goal:
 
 ## Milestone 4: Session workflow
 
-- [ ] MYPI-12 Add continue alias
-- [ ] MYPI-13 Add resume alias
-- [ ] MYPI-14 Add fork alias
-- [ ] MYPI-15 Add HTML export alias
+- [x] MYPI-12 Add continue alias
+- [x] MYPI-13 Add resume alias
+- [x] MYPI-14 Add fork alias
+- [x] MYPI-15 Add HTML export alias
 
 ## Milestone 5: Config and health
 

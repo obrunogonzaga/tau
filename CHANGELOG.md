@@ -15,6 +15,7 @@
 - Add `ask`, `code`, and `review` command aliases.
 - Add `plan`, `grill`, `fix`, `commit`, `pr`, and `debug` task aliases.
 - Add `ship` implementation alias.
+- Add `continue`, `resume`, `fork`, and `export` session aliases.
 - Add default system prompt loading through `--append-system-prompt`.
 - Add `MY_PI_NO_PROMPT=1` prompt opt-out.
 - Add `--profile` override for aliases and direct commands.
@@ -22,6 +23,7 @@
 - Add Node test coverage for profile expansion.
 - Add Node test coverage for task aliases and prompt loading.
 - Add exact tool policy coverage for `review`, `debug`, and `ship`.
+- Add exact arg coverage for session aliases.
 - Add exact model cycling coverage for `router`.
 - Add isolated `my-pi` session directory.
 

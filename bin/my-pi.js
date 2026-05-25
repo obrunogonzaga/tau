@@ -56,12 +56,16 @@ const aliasExtras = {
   ask: ['-p'],
   code: [],
   commit: ['--tools', DEBUG_TOOLS, '-p'],
+  continue: ['--continue'],
   debug: ['--tools', DEBUG_TOOLS, '-p'],
+  export: ['--export'],
   fix: [],
+  fork: ['--fork'],
   grill: ['--tools', READ_TOOLS, '-p'],
   plan: ['--tools', READ_TOOLS, '-p'],
   pr: ['--tools', DEBUG_TOOLS, '-p'],
   review: ['--tools', READ_TOOLS, '-p'],
+  resume: ['--resume'],
   ship: [],
 }
 
@@ -69,12 +73,16 @@ const aliasProfiles = {
   ask: DEFAULT_PROFILE,
   code: DEFAULT_PROFILE,
   commit: DEFAULT_PROFILE,
+  continue: DEFAULT_PROFILE,
   debug: profiles.deep,
+  export: DEFAULT_PROFILE,
   fix: DEFAULT_PROFILE,
+  fork: DEFAULT_PROFILE,
   grill: profiles.deep,
   plan: DEFAULT_PROFILE,
   pr: DEFAULT_PROFILE,
   review: DEFAULT_PROFILE,
+  resume: DEFAULT_PROFILE,
   ship: DEFAULT_PROFILE,
 }
 
