@@ -9,18 +9,18 @@
 
 ## Repo
 
-- This repo customizes the local `pi` CLI through `my-pi`.
-- Main entrypoint: `bin/my-pi.js`.
-- Global command is provided by `package.json` `bin.my-pi`.
-- Sessions are isolated under `~/.pi/my-pi/sessions`.
+- This repo customizes the local `pi` CLI through `tau`.
+- Main entrypoint: `bin/tau.js`.
+- Global command is provided by `package.json` `bin.tau`.
+- Sessions are isolated under `~/.pi/tau/sessions`.
 - Tests use Node built-in test runner.
 
 ## Commands
 
 ```bash
 npm test
-npm run my-pi
-my-pi fast "summarize this repo"
+npm run tau
+tau fast "summarize this repo"
 ```
 
 ## Rules

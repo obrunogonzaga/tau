@@ -8,10 +8,10 @@ const rawArgs = process.argv.slice(2)
 
 const resolveRepoPath = (...segments) => path.resolve(import.meta.dirname, '..', ...segments)
 
-const defaultConfigPath = resolveRepoPath('config', 'my-pi.config.json')
+const defaultConfigPath = resolveRepoPath('config', 'tau.config.json')
 
 const resolveConfigPath = () => {
-  const configPath = process.env.MY_PI_CONFIG_PATH
+  const configPath = process.env.TAU_CONFIG_PATH
   if (!configPath) return defaultConfigPath
   return path.isAbsolute(configPath) ? configPath : path.resolve(process.cwd(), configPath)
 }
@@ -49,13 +49,25 @@ const validateAlias = (name, alias, profiles) => {
   }
 }
 
+const validateExtensionPreset = (name, preset, profiles) => {
+  if (!preset || !profiles[preset.profile] || !Array.isArray(preset.extensions)) {
+    throw new Error(`Invalid config: extension preset ${name} requires profile and extensions`)
+  }
+  if (preset.extensions.some((extension) => !hasText(extension))) {
+    throw new Error(`Invalid config: extension preset ${name} has invalid extension`)
+  }
+}
+
 const validateConfig = (config) => {
-  if (!config?.profiles || !config?.aliases || !hasText(config.defaultProfile)) {
-    throw new Error('Invalid config: profiles, aliases, and defaultProfile are required')
+  if (!config?.profiles || !config?.aliases || !config?.extensionPresets || !hasText(config.defaultProfile)) {
+    throw new Error('Invalid config: profiles, aliases, extensionPresets, and defaultProfile are required')
   }
   if (!config.profiles[config.defaultProfile]) throw new Error('Invalid config: defaultProfile unknown')
   Object.entries(config.profiles).forEach(([name, profile]) => validateProfile(name, profile, config.profiles))
   Object.entries(config.aliases).forEach(([name, alias]) => validateAlias(name, alias, config.profiles))
+  Object.entries(config.extensionPresets).forEach(([name, preset]) =>
+    validateExtensionPreset(name, preset, config.profiles),
+  )
 }
 
 const loadConfig = () => {
@@ -79,6 +91,8 @@ const profileArgs = (config, profileName) => {
   const profileConfig = config.profiles[profileName]
   return [...profileBaseArgs(profileConfig), ...modelCyclingArgs(config, profileConfig)]
 }
+
+const extensionArgs = (extensions) => extensions.flatMap((extension) => ['-e', resolveRepoPath('extensions', extension)])
 
 const extractProfileAt = (config, args, profileIndex) => {
   const profileArg = args[profileIndex]
@@ -106,7 +120,7 @@ const extractProfile = (config, args) => {
 
 const resolvePromptPath = () => resolveRepoPath('prompts', 'system-prompt.md')
 
-const shouldAppendPrompt = () => process.env.MY_PI_NO_PROMPT !== '1'
+const shouldAppendPrompt = () => process.env.TAU_NO_PROMPT !== '1'
 
 const readPrompt = () => fs.readFileSync(resolvePromptPath(), 'utf8').trim()
 
@@ -115,6 +129,15 @@ const appendSystemPrompt = (args, promptText) => ['--append-system-prompt', prom
 const resolveArgs = (config, rawInputArgs) => {
   const { args: inputArgs, profileName } = extractProfile(config, rawInputArgs)
   const [firstArg, ...restArgs] = inputArgs
+
+  if (firstArg === 'ext') {
+    const [presetName, ...presetRestArgs] = restArgs
+    const preset = config.extensionPresets[presetName]
+    if (!preset) throw new Error(`Unknown extension preset: ${presetName ?? ''}`)
+    const selectedProfile = profileName ?? preset.profile
+
+    return [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...presetRestArgs]
+  }
 
   if (config.aliases[firstArg]) {
     const alias = config.aliases[firstArg]
@@ -134,7 +157,7 @@ const resolveArgs = (config, rawInputArgs) => {
 
 const HOME_DIR = os.homedir()
 const defaultSettingsPath = path.join(HOME_DIR, '.pi', 'agent', 'settings.json')
-const configuredPath = process.env.MY_PI_SETTINGS_PATH
+const configuredPath = process.env.TAU_SETTINGS_PATH
 
 const resolveSettingsPath = (rawPath) => {
   if (!rawPath) return defaultSettingsPath
@@ -144,7 +167,7 @@ const resolveSettingsPath = (rawPath) => {
 const settingsPath = resolveSettingsPath(configuredPath)
 const fallbackPath = fs.existsSync(settingsPath) ? settingsPath : defaultSettingsPath
 const configDir = path.dirname(fallbackPath)
-const sessionDir = path.join(HOME_DIR, '.pi', 'my-pi', 'sessions')
+const sessionDir = path.join(HOME_DIR, '.pi', 'tau', 'sessions')
 
 const printCheck = (status, name, detail) => {
   console.log(`[${status}] ${name}${detail ? `: ${detail}` : ''}`)
@@ -214,21 +237,21 @@ try {
   args = resolveArgs(config, rawArgs)
   if (shouldAppendPrompt()) args = appendSystemPrompt(args, readPrompt())
 } catch (error) {
-  console.error(`[my-pi] ${error.message}`)
+  console.error(`[tau] ${error.message}`)
   process.exit(1)
 }
 
 if (configuredPath && !fs.existsSync(settingsPath)) {
-  console.error(`[my-pi] MY_PI_SETTINGS_PATH not found: ${settingsPath}`)
-  console.error(`[my-pi] fallback settings: ${defaultSettingsPath}`)
+  console.error(`[tau] TAU_SETTINGS_PATH not found: ${settingsPath}`)
+  console.error(`[tau] fallback settings: ${defaultSettingsPath}`)
 }
 
-const logsDir = path.join(configDir, 'my-pi', 'logs')
+const logsDir = path.join(configDir, 'tau', 'logs')
 const logFile = path.join(logsDir, `pi-${new Date().toISOString().slice(0, 10)}.log`)
 const logEntry = `${new Date().toISOString()} start cmd=pi settings=${fallbackPath} args=${JSON.stringify(args)}\n`
-const banner = process.env.MY_PI_BANNER || 'My Pi'
+const banner = process.env.TAU_BANNER || 'Tau'
 
-if (process.env.MY_PI_BANNER !== '0') {
+if (process.env.TAU_BANNER !== '0') {
   console.log(`[${banner}] starting`)
 }
 
@@ -258,6 +281,6 @@ child.on('exit', (code, signal) => {
 })
 
 child.on('error', (error) => {
-  console.error(`[my-pi] failed to start pi: ${error.message}`)
+  console.error(`[tau] failed to start pi: ${error.message}`)
   process.exit(1)
 })

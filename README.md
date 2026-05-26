@@ -1,15 +1,16 @@
-# my-pi-version
+# tau
 
 This repo stores my customized `pi` CLI layer: router, prompts, configs, extensions, scripts.
 
 ## What is inside
 
 - `extensions/`  place for local extensions
+- `.pi/`          project-local Pi resources
 - `prompts/`     shared prompt templates
 - `scripts/`     helper scripts
 - `agent-settings.example.json` template for ~/.pi/agent/settings.json
-- `config/my-pi.config.json` versioned profiles, aliases, and doctor key checks
-- `bin/my-pi.js` wrapper/router to run current installed pi
+- `config/tau.config.json` versioned profiles, aliases, and doctor key checks
+- `bin/tau.js` wrapper/router to run current installed pi
 
 ## Quick start
 
@@ -18,23 +19,25 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
 2. Start pi:
    - `npm run pi`
 3. Start with default wrapper:
-   - `npm run my-pi`
+   - `npm run tau`
 4. Start with fast profile:
-   - `my-pi fast "summarize this repo"`
+   - `tau fast "summarize this repo"`
 5. Start with work profile:
-   - `my-pi work "implement this"`
+   - `tau work "implement this"`
 6. Start with deep profile:
-   - `my-pi deep "debug this hard bug"`
+   - `tau deep "debug this hard bug"`
 7. Start with router profile:
-   - `my-pi router "work where model may change"`
+   - `tau router "work where model may change"`
 8. Check local setup:
-   - `my-pi doctor`
+   - `tau doctor`
+9. Run an extension preset:
+   - `tau ext minimal "focus"`
 
 ## Profiles
 
 A profile is a named preset that expands to pi flags.
 
-Profiles live in `config/my-pi.config.json`.
+Profiles live in `config/tau.config.json`.
 
 - `fast`: default quick answers: `--provider openai-codex --model gpt-5.3-codex-spark --thinking low`
 - `work`: opt-in Copilot: `--provider github-copilot --model gpt-5.5 --thinking medium`
@@ -51,7 +54,7 @@ Profiles live in `config/my-pi.config.json`.
 
 ## Aliases
 
-Aliases live in `config/my-pi.config.json`.
+Aliases live in `config/tau.config.json`.
 
 - `ask`: `-p`
 - `code`: same as `fast`
@@ -70,21 +73,21 @@ Aliases live in `config/my-pi.config.json`.
 
 Examples:
 
-- `my-pi ask "what is this repo?"`
-- `my-pi code "implement this"`
-- `my-pi review "review current changes without running commands"`
-- `my-pi plan "split M2 into phases"`
-- `my-pi grill "attack this architecture"`
-- `my-pi fix "repair failing tests"`
-- `my-pi commit "prepare commit for current diff"`
-- `my-pi pr "draft PR for current branch"`
-- `my-pi debug "reproduce failing npm test without editing files"`
-- `my-pi ship "implement M2"`
-- `my-pi continue "finish the previous task"`
-- `my-pi resume`
-- `my-pi resume "continue with this prompt"`
-- `my-pi fork session-123 "try another path"`
-- `my-pi export session-123 session.html`
+- `tau ask "what is this repo?"`
+- `tau code "implement this"`
+- `tau review "review current changes without running commands"`
+- `tau plan "split M2 into phases"`
+- `tau grill "attack this architecture"`
+- `tau fix "repair failing tests"`
+- `tau commit "prepare commit for current diff"`
+- `tau pr "draft PR for current branch"`
+- `tau debug "reproduce failing npm test without editing files"`
+- `tau ship "implement M2"`
+- `tau continue "finish the previous task"`
+- `tau resume`
+- `tau resume "continue with this prompt"`
+- `tau fork session-123 "try another path"`
+- `tau export session-123 session.html`
 
 Session aliases:
 
@@ -95,33 +98,34 @@ Session aliases:
 
 Aliases can use a profile override:
 
-- `my-pi review --profile deep "review diff"`
-- `my-pi ship --profile deep "ship harder change"`
-- `my-pi ship --profile router "ship with model cycling"`
-- `my-pi plan --profile fast "quick plan"`
-- `my-pi ship --profile work "force Copilot"`
-- `my-pi --profile fast "quick task"`
-- `my-pi --profile router "quick task with model cycling"`
+- `tau review --profile deep "review diff"`
+- `tau ship --profile deep "ship harder change"`
+- `tau ship --profile router "ship with model cycling"`
+- `tau plan --profile fast "quick plan"`
+- `tau ship --profile work "force Copilot"`
+- `tau --profile fast "quick task"`
+- `tau --profile router "quick task with model cycling"`
 
 `--profile` is only parsed at the start or right after an alias.
 
 ## Config
 
-Edit `config/my-pi.config.json` to change profiles, aliases, task prompts, and provider key names checked by `doctor`.
+Edit `config/tau.config.json` to change profiles, aliases, task prompts, and provider key names checked by `doctor`.
 
 - `defaultProfile`: fallback profile for direct commands and aliases.
 - `profiles`: named provider/model/thinking presets.
 - `profiles.router.models`: exact model cycling list.
 - `aliases`: command presets with profile, extra args, and optional prompt.
+- `extensionPresets`: named `tau ext` stacks.
 - `providerKeys`: env var names checked by provider, values never printed.
 
-Use `MY_PI_CONFIG_PATH=./other-config.json my-pi ...` to test another config.
+Use `TAU_CONFIG_PATH=./other-config.json tau ...` to test another config.
 
 Invalid config fails before `pi` starts.
 
 ## Doctor
 
-`my-pi doctor` prints concise checks:
+`tau doctor` prints concise checks:
 
 - Node version >= 22.19
 - `pi --version`
@@ -134,28 +138,74 @@ Required check failure exits non-zero. Missing provider keys are warnings.
 
 ## Extensions
 
+- `tau ext minimal`: loads `status-footer`.
+- `tau ext banner`: loads `tau-banner`.
+- `tau ext focus`: loads `pure-focus` + `status-footer`.
+- `tau ext safe`: loads `status-footer` + `tool-counter-footer`.
+- `tau ext team`: loads `status-footer` + `tool-counter-footer`.
+- `tau ext chain`: loads `status-footer` + `tool-counter-footer`.
 - `pure-focus`: hides header, footer, working row, and status labels.
+- `tau-banner`: replaces the default Pi header with a compact Tau banner.
+- `status-footer`: one-line model, context, and branch footer.
+- `tool-counter-footer`: one-line cwd, branch, model, context, cost placeholder, and per-tool counts.
 - Set `quietStartup: true` in settings to hide loaded resource lists too.
 
-Example:
+Commands:
 
-- `my-pi router -e extensions/pure-focus.ts "focus"`
+- `tau ext minimal "focus"`
+- `tau ext banner`
+- `tau router -e extensions/pure-focus.ts "focus"`
+- `npm run ext:banner`
+- `npm run ext:minimal`
+- `npm run ext:focus`
+- `npm run ext:safe`
+- `npm run ext:team`
+- `npm run ext:chain`
+- `npm run ext:smoke`
+
+Layout:
+
+- `extensions/*.ts`: curated Tau extension entrypoints for explicit `tau ext` presets.
+- `.pi/extensions/`: project-local Pi auto-discovery and `/reload`.
+- `.pi/agents/`: local specialist agent prompts.
+- `.pi/teams/`: team workflow definitions.
+- `.pi/chains/`: sequential workflow definitions.
+- `.pi/themes/`: local TUI themes.
+- `.pi/rules/`: local policy and safety notes.
 
 ### Wrapper knobs
 
-- `MY_PI_SETTINGS_PATH`: path to a custom settings file (defaults to `~/.pi/agent/settings.json`).
-- `MY_PI_CONFIG_PATH`: path to a custom wrapper config.
-- `MY_PI_BANNER`: custom banner text (set to `0` to disable).
-- `MY_PI_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
-- Logs: minimal startup logs are written to `<config-dir>/my-pi/logs/pi-YYYY-MM-DD.log`.
-- Sessions: `my-pi` stores sessions in `~/.pi/my-pi/sessions`.
+- `TAU_SETTINGS_PATH`: path to a custom settings file (defaults to `~/.pi/agent/settings.json`).
+- `TAU_CONFIG_PATH`: path to a custom wrapper config.
+- `TAU_BANNER`: custom banner text (set to `0` to disable).
+- `TAU_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
+- Logs: minimal startup logs are written to `<config-dir>/tau/logs/pi-YYYY-MM-DD.log`.
+- Sessions: `tau` stores sessions in `~/.pi/tau/sessions`.
 
 Examples:
 
-- `MY_PI_SETTINGS_PATH=./profiles/dev.json npm run my-pi`
-- `MY_PI_BANNER=my-ops-pi npm run my-pi`
-- `MY_PI_NO_PROMPT=1 my-pi ask "raw upstream behavior"`
+- `TAU_SETTINGS_PATH=./profiles/dev.json npm run tau`
+- `TAU_BANNER=my-ops-pi npm run tau`
+- `TAU_NO_PROMPT=1 tau ask "raw upstream behavior"`
 
 ## Versioning
 
-This repo uses Git + GitHub. Commits should follow conventional commits and branch names `type/description`.
+This repo uses Git + GitHub + Changesets. Commits should follow conventional commits and branch names `type/description`.
+
+Release flow:
+
+1. Add a changeset after user-visible changes:
+   - `npx changeset`
+   - or `npm run changeset`
+2. Apply pending changesets to version and changelog files:
+   - `npx changeset version`
+   - or `npm run release:version`
+3. Publish only when this private package becomes publishable:
+   - `npx changeset publish`
+   - or `npm run release:publish`
+
+Private caveat:
+
+- `package.json` has `"private": true`.
+- Changesets can version this package locally.
+- Do not publish yet.

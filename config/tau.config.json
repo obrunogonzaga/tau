@@ -87,5 +87,31 @@
       "profile": "fast",
       "prompt": "Implement explicitly. Edit, test, document, and verify before reporting done."
     }
+  },
+  "extensionPresets": {
+    "banner": {
+      "extensions": ["tau-banner.ts"],
+      "profile": "fast"
+    },
+    "chain": {
+      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast"
+    },
+    "focus": {
+      "extensions": ["pure-focus.ts", "status-footer.ts"],
+      "profile": "fast"
+    },
+    "minimal": {
+      "extensions": ["status-footer.ts"],
+      "profile": "fast"
+    },
+    "safe": {
+      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast"
+    },
+    "team": {
+      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast"
+    }
   }
 }

@@ -6,12 +6,13 @@ import { spawnSync } from 'node:child_process'
 import test from 'node:test'
 
 const repoDir = path.resolve(import.meta.dirname, '..')
-const wrapperPath = path.join(repoDir, 'bin', 'my-pi.js')
+const wrapperPath = path.join(repoDir, 'bin', 'tau.js')
 const promptPath = path.join(repoDir, 'prompts', 'system-prompt.md')
-const configPath = path.join(repoDir, 'config', 'my-pi.config.json')
+const configPath = path.join(repoDir, 'config', 'tau.config.json')
 const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim()
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,openai-codex/gpt-5.5:xhigh'
+const extensionPath = (name) => path.join(repoDir, 'extensions', name)
 
 const withSystemPrompt = (args) => ['--append-system-prompt', systemPrompt, ...args]
 
@@ -23,7 +24,7 @@ const assertToolList = (record, expectedTools) => {
 }
 
 const runWrapperResult = (args, env = {}) => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-'))
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-'))
   const binDir = path.join(tempDir, 'bin')
   const recordPath = path.join(tempDir, 'record.json')
 
@@ -32,7 +33,7 @@ const runWrapperResult = (args, env = {}) => {
     path.join(binDir, 'pi'),
     `#!/usr/bin/env node
 import fs from 'node:fs'
-fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
+fs.writeFileSync(process.env.TAU_TEST_RECORD, JSON.stringify({
   args: process.argv.slice(2),
   agentDir: process.env.PI_CODING_AGENT_DIR,
   sessionDir: process.env.PI_CODING_AGENT_SESSION_DIR
@@ -44,8 +45,8 @@ fs.writeFileSync(process.env.MY_PI_TEST_RECORD, JSON.stringify({
   const result = spawnSync(process.execPath, [wrapperPath, ...args], {
     env: {
       ...process.env,
-      MY_PI_BANNER: '0',
-      MY_PI_TEST_RECORD: recordPath,
+      TAU_BANNER: '0',
+      TAU_TEST_RECORD: recordPath,
       PATH: `${binDir}:${process.env.PATH}`,
       ...env,
     },
@@ -62,7 +63,7 @@ const writeExecutable = (filePath, content) => {
 }
 
 const runDoctorResult = ({ env = {}, settings = true, pi = true, tmux = null } = {}) => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-doctor-'))
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-doctor-'))
   const binDir = path.join(tempDir, 'bin')
   const homeDir = path.join(tempDir, 'home')
   const settingsPath = path.join(homeDir, '.pi', 'agent', 'settings.json')
@@ -83,7 +84,7 @@ const runDoctorResult = ({ env = {}, settings = true, pi = true, tmux = null } =
     env: {
       ...process.env,
       HOME: homeDir,
-      MY_PI_BANNER: '0',
+      TAU_BANNER: '0',
       PATH: binDir,
       ...env,
     },
@@ -99,7 +100,7 @@ const runWrapper = (args) => {
   return record
 }
 
-test('myPi_fastProfile_prependsFastModelArgs', () => {
+test('tau_fastProfile_prependsFastModelArgs', () => {
   const record = runWrapper(['fast', 'hello'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -112,10 +113,10 @@ test('myPi_fastProfile_prependsFastModelArgs', () => {
     'hello',
   ]))
   assert.equal(record.agentDir, path.join(os.homedir(), '.pi', 'agent'))
-  assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'my-pi', 'sessions'))
+  assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'tau', 'sessions'))
 })
 
-test('myPi_workProfile_prependsCopilotArgs', () => {
+test('tau_workProfile_prependsCopilotArgs', () => {
   const record = runWrapper(['work', 'ship it'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -129,7 +130,7 @@ test('myPi_workProfile_prependsCopilotArgs', () => {
   ]))
 })
 
-test('myPi_deepProfile_prependsOpenAiCodexArgs', () => {
+test('tau_deepProfile_prependsOpenAiCodexArgs', () => {
   const record = runWrapper(['deep', 'debug hard bug'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -143,7 +144,7 @@ test('myPi_deepProfile_prependsOpenAiCodexArgs', () => {
   ]))
 })
 
-test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
+test('tau_routerProfile_addsDailyModelCyclingArgs', () => {
   const record = runWrapper(['router', 'route this'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -159,7 +160,7 @@ test('myPi_routerProfile_addsDailyModelCyclingArgs', () => {
   ]))
 })
 
-test('myPi_configFile_containsProfilesAndAliases', () => {
+test('tau_configFile_containsProfilesAndAliases', () => {
   assert.deepEqual(Object.keys(config.profiles).sort(), ['deep', 'fast', 'router', 'work'])
   assert.deepEqual(Object.keys(config.aliases).sort(), [
     'ask',
@@ -177,9 +178,102 @@ test('myPi_configFile_containsProfilesAndAliases', () => {
     'review',
     'ship',
   ])
+  assert.deepEqual(Object.keys(config.extensionPresets).sort(), ['banner', 'chain', 'focus', 'minimal', 'safe', 'team'])
 })
 
-test('myPi_askAlias_usesPrintMode', () => {
+test('tau_extBanner_expandsBannerPreset', () => {
+  const record = runWrapper(['ext', 'banner'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+  ]))
+})
+
+test('tau_extMinimal_expandsExtensionPreset', () => {
+  const record = runWrapper(['ext', 'minimal', 'focus now'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('status-footer.ts'),
+    'focus now',
+  ]))
+})
+
+test('tau_extFocus_expandsStackedExtensionPreset', () => {
+  const record = runWrapper(['ext', 'focus', 'work clean'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('pure-focus.ts'),
+    '-e',
+    extensionPath('status-footer.ts'),
+    'work clean',
+  ]))
+})
+
+test('tau_extSafe_expandsToolCounterPreset', () => {
+  const record = runWrapper(['ext', 'safe', 'watch tools'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('status-footer.ts'),
+    '-e',
+    extensionPath('tool-counter-footer.ts'),
+    'watch tools',
+  ]))
+})
+
+test('tau_extUnknownPreset_failsFast', () => {
+  const { result } = runWrapperResult(['ext', 'missing'])
+
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /Unknown extension preset: missing/)
+})
+
+test('tau_extensionStructure_containsLocalPiFolders', () => {
+  const requiredPaths = [
+    '.pi/agents',
+    '.pi/chains',
+    '.pi/extensions',
+    '.pi/rules',
+    '.pi/teams',
+    '.pi/themes',
+    'extensions/tau-banner.ts',
+    'extensions/status-footer.ts',
+    'extensions/tool-counter-footer.ts',
+  ]
+
+  for (const requiredPath of requiredPaths) {
+    assert.equal(fs.existsSync(path.join(repoDir, requiredPath)), true, requiredPath)
+  }
+})
+
+test('tau_askAlias_usesPrintMode', () => {
   const record = runWrapper(['ask', 'quick question'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -194,7 +288,7 @@ test('myPi_askAlias_usesPrintMode', () => {
   ]))
 })
 
-test('myPi_codeAlias_usesDefaultFastProfile', () => {
+test('tau_codeAlias_usesDefaultFastProfile', () => {
   const record = runWrapper(['code', 'implement feature'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -208,7 +302,7 @@ test('myPi_codeAlias_usesDefaultFastProfile', () => {
   ]))
 })
 
-test('myPi_reviewAlias_usesReadOnlyPrintMode', () => {
+test('tau_reviewAlias_usesReadOnlyPrintMode', () => {
   const record = runWrapper(['review', 'review diff'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -226,7 +320,7 @@ test('myPi_reviewAlias_usesReadOnlyPrintMode', () => {
   assertToolList(record, 'read,grep,find,ls')
 })
 
-test('myPi_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
+test('tau_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
   const record = runWrapper(['review', '--profile', 'deep', 'review diff'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -244,7 +338,7 @@ test('myPi_reviewAliasWithDeepProfile_usesDeepReadOnlyPrintMode', () => {
   assertToolList(record, 'read,grep,find,ls')
 })
 
-test('myPi_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
+test('tau_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
   const record = runWrapper(['review', '--profile=deep', 'review diff'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -262,7 +356,7 @@ test('myPi_reviewAliasWithEqualsProfile_usesDeepReadOnlyPrintMode', () => {
   assertToolList(record, 'read,grep,find,ls')
 })
 
-test('myPi_planAlias_usesPlanningArgs', () => {
+test('tau_planAlias_usesPlanningArgs', () => {
   const record = runWrapper(['plan', 'design milestone'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -281,7 +375,7 @@ test('myPi_planAlias_usesPlanningArgs', () => {
   ]))
 })
 
-test('myPi_grillAlias_usesCriticalReviewArgs', () => {
+test('tau_grillAlias_usesCriticalReviewArgs', () => {
   const record = runWrapper(['grill', 'review plan'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -300,7 +394,7 @@ test('myPi_grillAlias_usesCriticalReviewArgs', () => {
   ]))
 })
 
-test('myPi_fixAlias_usesFocusedWorkArgs', () => {
+test('tau_fixAlias_usesFocusedWorkArgs', () => {
   const record = runWrapper(['fix', 'bug'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -316,7 +410,7 @@ test('myPi_fixAlias_usesFocusedWorkArgs', () => {
   ]))
 })
 
-test('myPi_commitAlias_usesCommitArgs', () => {
+test('tau_commitAlias_usesCommitArgs', () => {
   const record = runWrapper(['commit', 'current diff'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -335,7 +429,7 @@ test('myPi_commitAlias_usesCommitArgs', () => {
   ]))
 })
 
-test('myPi_prAlias_usesPrArgs', () => {
+test('tau_prAlias_usesPrArgs', () => {
   const record = runWrapper(['pr', 'current branch'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -354,7 +448,7 @@ test('myPi_prAlias_usesPrArgs', () => {
   ]))
 })
 
-test('myPi_debugAlias_usesDebugArgs', () => {
+test('tau_debugAlias_usesDebugArgs', () => {
   const record = runWrapper(['debug', 'repro failure'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -374,7 +468,7 @@ test('myPi_debugAlias_usesDebugArgs', () => {
   assertToolList(record, 'read,grep,find,ls,bash')
 })
 
-test('myPi_shipAlias_usesDefaultFastProfile', () => {
+test('tau_shipAlias_usesDefaultFastProfile', () => {
   const record = runWrapper(['ship', 'implement feature'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -390,7 +484,7 @@ test('myPi_shipAlias_usesDefaultFastProfile', () => {
   ]))
 })
 
-test('myPi_shipAliasWithDeepProfile_usesDeepProfile', () => {
+test('tau_shipAliasWithDeepProfile_usesDeepProfile', () => {
   const record = runWrapper(['ship', '--profile', 'deep', 'hard implementation'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -406,7 +500,7 @@ test('myPi_shipAliasWithDeepProfile_usesDeepProfile', () => {
   ]))
 })
 
-test('myPi_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
+test('tau_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
   const record = runWrapper(['ship', '--profile', 'router', 'uncertain implementation'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -424,7 +518,7 @@ test('myPi_shipAliasWithRouterProfile_addsModelCyclingArgs', () => {
   ]))
 })
 
-test('myPi_continueAlias_forwardsContinueWithPrompt', () => {
+test('tau_continueAlias_forwardsContinueWithPrompt', () => {
   const record = runWrapper(['continue', 'finish this'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -439,7 +533,7 @@ test('myPi_continueAlias_forwardsContinueWithPrompt', () => {
   ]))
 })
 
-test('myPi_resumeAlias_forwardsResume', () => {
+test('tau_resumeAlias_forwardsResume', () => {
   const record = runWrapper(['resume'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -453,7 +547,7 @@ test('myPi_resumeAlias_forwardsResume', () => {
   ]))
 })
 
-test('myPi_resumeAlias_preservesPromptArgs', () => {
+test('tau_resumeAlias_preservesPromptArgs', () => {
   const record = runWrapper(['resume', 'continue from selection'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -468,7 +562,7 @@ test('myPi_resumeAlias_preservesPromptArgs', () => {
   ]))
 })
 
-test('myPi_forkAlias_forwardsForkSessionId', () => {
+test('tau_forkAlias_forwardsForkSessionId', () => {
   const record = runWrapper(['fork', 'session-123'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -483,7 +577,7 @@ test('myPi_forkAlias_forwardsForkSessionId', () => {
   ]))
 })
 
-test('myPi_forkAlias_preservesArgsAfterSessionId', () => {
+test('tau_forkAlias_preservesArgsAfterSessionId', () => {
   const record = runWrapper(['fork', 'session-123', 'try another path'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -499,7 +593,7 @@ test('myPi_forkAlias_preservesArgsAfterSessionId', () => {
   ]))
 })
 
-test('myPi_exportAlias_forwardsExportSessionId', () => {
+test('tau_exportAlias_forwardsExportSessionId', () => {
   const record = runWrapper(['export', 'session-123'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -514,7 +608,7 @@ test('myPi_exportAlias_forwardsExportSessionId', () => {
   ]))
 })
 
-test('myPi_exportAlias_preservesOutputPath', () => {
+test('tau_exportAlias_preservesOutputPath', () => {
   const record = runWrapper(['export', 'session-123', 'session.html'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -530,7 +624,7 @@ test('myPi_exportAlias_preservesOutputPath', () => {
   ]))
 })
 
-test('myPi_profileFlag_usesProfile', () => {
+test('tau_profileFlag_usesProfile', () => {
   const record = runWrapper(['--profile', 'fast', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -544,7 +638,7 @@ test('myPi_profileFlag_usesProfile', () => {
   ]))
 })
 
-test('myPi_workProfileFlag_usesCopilotOnlyWhenForced', () => {
+test('tau_workProfileFlag_usesCopilotOnlyWhenForced', () => {
   const record = runWrapper(['--profile', 'work', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -558,7 +652,7 @@ test('myPi_workProfileFlag_usesCopilotOnlyWhenForced', () => {
   ]))
 })
 
-test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
+test('tau_routerProfileFlag_addsDailyModelCyclingArgs', () => {
   const record = runWrapper(['--profile', 'router', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -574,7 +668,7 @@ test('myPi_routerProfileFlag_addsDailyModelCyclingArgs', () => {
   ]))
 })
 
-test('myPi_equalsProfileFlag_usesProfile', () => {
+test('tau_equalsProfileFlag_usesProfile', () => {
   const record = runWrapper(['--profile=fast', 'quick task'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -588,7 +682,7 @@ test('myPi_equalsProfileFlag_usesProfile', () => {
   ]))
 })
 
-test('myPi_profileTextAfterPromptStart_preservesPromptText', () => {
+test('tau_profileTextAfterPromptStart_preservesPromptText', () => {
   const record = runWrapper(['review', 'check', '--profile', 'literal'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -607,7 +701,7 @@ test('myPi_profileTextAfterPromptStart_preservesPromptText', () => {
   ]))
 })
 
-test('myPi_defaultArgs_appendsSystemPrompt', () => {
+test('tau_defaultArgs_appendsSystemPrompt', () => {
   const record = runWrapper(['hello'])
 
   assert.deepEqual(record.args, withSystemPrompt([
@@ -621,8 +715,8 @@ test('myPi_defaultArgs_appendsSystemPrompt', () => {
   ]))
 })
 
-test('myPi_promptOptOut_skipsSystemPrompt', () => {
-  const { record, result } = runWrapperResult(['hello'], { MY_PI_NO_PROMPT: '1' })
+test('tau_promptOptOut_skipsSystemPrompt', () => {
+  const { record, result } = runWrapperResult(['hello'], { TAU_NO_PROMPT: '1' })
 
   assert.equal(result.status, 0)
   assert.deepEqual(record.args, [
@@ -636,8 +730,8 @@ test('myPi_promptOptOut_skipsSystemPrompt', () => {
   ])
 })
 
-test('myPi_promptOptOut_skipsTaskPrompt', () => {
-  const { record, result } = runWrapperResult(['plan', 'raw plan'], { MY_PI_NO_PROMPT: '1' })
+test('tau_promptOptOut_skipsTaskPrompt', () => {
+  const { record, result } = runWrapperResult(['plan', 'raw plan'], { TAU_NO_PROMPT: '1' })
 
   assert.equal(result.status, 0)
   assert.deepEqual(record.args, [
@@ -654,32 +748,32 @@ test('myPi_promptOptOut_skipsTaskPrompt', () => {
   ])
 })
 
-test('myPi_unknownProfile_failsFast', () => {
+test('tau_unknownProfile_failsFast', () => {
   const { result } = runWrapperResult(['review', '--profile', 'missing', 'review diff'])
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /Unknown profile: missing/)
 })
 
-test('myPi_missingProfileValue_failsFast', () => {
+test('tau_missingProfileValue_failsFast', () => {
   const { result } = runWrapperResult(['review', '--profile'])
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /Missing value for --profile/)
 })
 
-test('myPi_invalidConfig_failsFastWithClearError', () => {
-  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'my-pi-config-'))
+test('tau_invalidConfig_failsFastWithClearError', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-config-'))
   const brokenConfigPath = path.join(tempDir, 'config.json')
   fs.writeFileSync(brokenConfigPath, '{"profiles":{}}')
 
-  const { result } = runWrapperResult(['hello'], { MY_PI_CONFIG_PATH: brokenConfigPath })
+  const { result } = runWrapperResult(['hello'], { TAU_CONFIG_PATH: brokenConfigPath })
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /Invalid config/)
 })
 
-test('myPi_doctor_reportsConcisePassingChecks', () => {
+test('tau_doctor_reportsConcisePassingChecks', () => {
   const result = runDoctorResult({
     env: {
       OPENAI_API_KEY: 'secret-openai',
@@ -697,7 +791,7 @@ test('myPi_doctor_reportsConcisePassingChecks', () => {
   assert.doesNotMatch(result.stdout, /secret-openai|secret-github/)
 })
 
-test('myPi_doctor_failsWhenRequiredCheckFails', () => {
+test('tau_doctor_failsWhenRequiredCheckFails', () => {
   const result = runDoctorResult({ pi: false, settings: false })
 
   assert.equal(result.status, 1)
@@ -705,7 +799,7 @@ test('myPi_doctor_failsWhenRequiredCheckFails', () => {
   assert.match(result.stdout, /\[fail\] settings/)
 })
 
-test('myPi_doctor_checksTmuxExtendedKeysInsideTmux', () => {
+test('tau_doctor_checksTmuxExtendedKeysInsideTmux', () => {
   const result = runDoctorResult({
     env: { TMUX: '/tmp/tmux' },
     tmux: 'off',

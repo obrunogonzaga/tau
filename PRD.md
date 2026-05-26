@@ -1,4 +1,4 @@
-# PRD: my-pi customization layer
+# PRD: tau customization layer
 
 ## Problem Statement
 
@@ -6,17 +6,17 @@
 
 ## Solution
 
-Create `my-pi`, a thin local wrapper around the installed `pi` CLI. It keeps personal behavior versioned in this repo while still using the current global `pi` binary.
+Create `tau`, a thin local wrapper around the installed `pi` CLI. It keeps personal behavior versioned in this repo while still using the current global `pi` binary.
 
 ## User Stories
 
-1. As Bruno, I want to run `my-pi` globally, so that I do not need to remember repo paths.
+1. As Bruno, I want to run `tau` globally, so that I do not need to remember repo paths.
 2. As Bruno, I want named profiles, so that common model setups are one command.
 3. As Bruno, I want a fast profile, so that quick tasks use a cheap fast coding model.
 4. As Bruno, I want a work profile, so that daily coding uses my Copilot-backed model setup.
 5. As Bruno, I want a deep profile, so that hard debugging and design tasks use maximum reasoning.
 6. As Bruno, I want wrapper logs, so that I can inspect how sessions started.
-7. As Bruno, I want isolated wrapper sessions, so that raw `pi` history stays separate from `my-pi` history.
+7. As Bruno, I want isolated wrapper sessions, so that raw `pi` history stays separate from `tau` history.
 8. As Bruno, I want quick aliases, so that repeated Pi command shapes are easy to run.
 9. As Bruno, I want configurable settings paths, so that I can test profiles without replacing default Pi config.
 10. As Bruno, I want tests for wrapper behavior, so that profile changes do not silently break.
@@ -24,22 +24,22 @@ Create `my-pi`, a thin local wrapper around the installed `pi` CLI. It keeps per
 
 ## Implementation Decisions
 
-- Keep `my-pi` as a Node executable wrapper.
+- Keep `tau` as a Node executable wrapper.
 - Use the global `pi` command from `PATH`.
-- Keep profiles in a single in-code map for now.
+- Keep profiles in `config/tau.config.json`.
 - Expand profile names before forwarding args to `pi`.
-- Use `MY_PI_SETTINGS_PATH` for alternate settings files.
-- Use `MY_PI_BANNER=0` to suppress startup banner.
-- Store `my-pi` sessions in a dedicated session directory.
+- Use `TAU_SETTINGS_PATH` for alternate settings files.
+- Use `TAU_BANNER=0` to suppress startup banner.
+- Store `tau` sessions in a dedicated session directory.
 - Use aliases for quick ask, coding mode, and read-only review mode.
 - Support `--profile` overrides for aliases and direct commands.
 - Parse `--profile` only before free-form prompt arguments.
 - Use Node built-in test runner.
-- Keep release/changelog docs manual until Changesets is configured.
+- Use Changesets for local version and changelog hygiene.
 
 ## Testing Decisions
 
-- Test external behavior: given `my-pi fast`, verify forwarded `pi` args.
+- Test external behavior: given `tau fast`, verify forwarded `pi` args.
 - Use a fake `pi` executable in a temporary PATH.
 - Avoid testing implementation internals like function names.
 - Run `npm test` before commits.
@@ -47,7 +47,6 @@ Create `my-pi`, a thin local wrapper around the installed `pi` CLI. It keeps per
 ## Out of Scope
 
 - Publishing this package.
-- Full Changesets setup.
 - Interactive profile management.
 - Automatic upstream `pi` updates.
 - Secret or API key management.
@@ -75,13 +74,13 @@ pi --provider openai-codex --model gpt-5.5 --thinking xhigh
 The current aliases expand to:
 
 ```bash
-my-pi ask "question"    # pi -p "question"
-my-pi code "task"       # pi with work profile
-my-pi review "changes"  # pi with work profile, shell-capable review tools, print mode
+tau ask "question"    # pi -p "question"
+tau code "task"       # pi with fast profile
+tau review "changes"  # pi with read-only tools, print mode
 ```
 
 Aliases can override the model profile:
 
 ```bash
-my-pi review --profile deep "review diff"
+tau review --profile deep "review diff"
 ```

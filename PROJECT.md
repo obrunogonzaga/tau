@@ -1,8 +1,8 @@
-# Project: Make my-pi more powerful
+# Project: Make tau more powerful
 
 ## Description
 
-Turn `my-pi` from a thin flag wrapper into a personal operational router for Pi.
+Turn `tau` from a thin flag wrapper into a personal operational router for Pi.
 
 Current state:
 
@@ -56,17 +56,17 @@ Goal:
 
 ## Milestone 6: Release hygiene
 
-- [ ] MYPI-20 Configure Changesets
-- [ ] MYPI-21 Add first changeset
-- [ ] MYPI-22 Document release flow
+- [x] MYPI-20 Configure Changesets
+- [x] MYPI-21 Add first changeset
+- [x] MYPI-22 Document release flow
 
 ## Milestone 7: Pi extension harness
 
-- [ ] MYPI-23 Add extension runner presets
-- [ ] MYPI-24 Add local extension directory structure
-- [ ] MYPI-25 Add just/npm recipes for extension stacks
-- [ ] MYPI-26 Add minimal status footer
-- [ ] MYPI-27 Add tool counter footer
+- [x] MYPI-23 Add extension runner presets
+- [x] MYPI-24 Add local extension directory structure
+- [x] MYPI-25 Add just/npm recipes for extension stacks
+- [x] MYPI-26 Add minimal status footer
+- [x] MYPI-27 Add tool counter footer
 
 ## Milestone 8: Safety and focus extensions
 
@@ -107,16 +107,16 @@ Each alias should choose profile, tools, print mode, and prompt behavior.
 
 Why:
 
-Today `my-pi` mainly saves typing. Task aliases should encode how Bruno actually works. A planning run should not behave like an implementation run. A review run should not have the same write surface as a shipping run.
+Today `tau` mainly saves typing. Task aliases should encode how Bruno actually works. A planning run should not behave like an implementation run. A review run should not have the same write surface as a shipping run.
 
 Expected outcome:
 
-- `my-pi plan "..."` starts a planning-oriented run
-- `my-pi grill "..."` starts a critical review of an idea or plan
-- `my-pi fix "..."` starts focused bug-fix mode
-- `my-pi commit "..."` helps prepare commit text and checks
-- `my-pi pr "..."` helps prepare PR text and checklist
-- `my-pi debug "..."` starts investigation mode
+- `tau plan "..."` starts a planning-oriented run
+- `tau grill "..."` starts a critical review of an idea or plan
+- `tau fix "..."` starts focused bug-fix mode
+- `tau commit "..."` helps prepare commit text and checks
+- `tau pr "..."` helps prepare PR text and checklist
+- `tau debug "..."` starts investigation mode
 
 ### MYPI-2: Add real system prompt
 
@@ -131,7 +131,7 @@ Replace `prompts/system-prompt.md` placeholder with Bruno-specific behavior:
 
 Why:
 
-The current prompt file is empty placeholder content. A real prompt makes `my-pi` opinionated by default and keeps repeated behavior out of every command.
+The current prompt file is empty placeholder content. A real prompt makes `tau` opinionated by default and keeps repeated behavior out of every command.
 
 Expected outcome:
 
@@ -153,8 +153,8 @@ The prompt only matters if the wrapper loads it automatically. The opt-out keeps
 
 Expected outcome:
 
-- default `my-pi` runs include the custom prompt
-- `MY_PI_NO_PROMPT=1 my-pi ...` or equivalent disables it
+- default `tau` runs include the custom prompt
+- `TAU_NO_PROMPT=1 tau ...` or equivalent disables it
 - tests prove prompt args are forwarded correctly
 
 ### MYPI-4: Document task commands
@@ -188,7 +188,7 @@ Review should prioritize reading and findings. Allowing `bash` by default expand
 
 Expected outcome:
 
-- `my-pi review "..."` forwards only read/search/list tools
+- `tau review "..."` forwards only read/search/list tools
 - shell access moves to `debug` or another explicit mode
 - tests lock the exact tool list
 
@@ -204,7 +204,7 @@ Debugging needs commands, tests, logs, and repro steps. It does not always need 
 
 Expected outcome:
 
-- `my-pi debug "..."` includes read/search/list/bash
+- `tau debug "..."` includes read/search/list/bash
 - no edit/write tools by default
 - useful for reproducing failures and inspecting runtime state
 
@@ -220,7 +220,7 @@ Implementation should be explicit. `ship` becomes the mode where edits, tests, d
 
 Expected outcome:
 
-- `my-pi ship "..."` starts implementation mode
+- `tau ship "..."` starts implementation mode
 - full tool access is available
 - `--profile deep` can be used for harder changes
 - README explains that this is the mutating mode
@@ -248,7 +248,7 @@ Create a controlled model list for daily work.
 
 Why:
 
-Pi supports Ctrl+P model cycling. `my-pi` should preload the models Bruno actually wants instead of relying on global provider catalogs.
+Pi supports Ctrl+P model cycling. `tau` should preload the models Bruno actually wants instead of relying on global provider catalogs.
 
 Expected outcome:
 
@@ -266,7 +266,7 @@ Sometimes the right model is not known upfront. A router profile should start wi
 
 Expected outcome:
 
-- `my-pi router "..."` starts with daily default
+- `tau router "..."` starts with daily default
 - `--models` includes approved alternates
 - profile is documented with when to use it
 
@@ -296,7 +296,7 @@ Continuing the last session is common enough to deserve a short command.
 
 Expected outcome:
 
-- `my-pi continue "..."` forwards `--continue`
+- `tau continue "..."` forwards `--continue`
 - alias can accept an extra prompt
 - README shows example usage
 
@@ -310,7 +310,7 @@ Resume lets Bruno pick a previous session without remembering Pi flags.
 
 Expected outcome:
 
-- `my-pi resume` forwards `--resume`
+- `tau resume` forwards `--resume`
 - optional prompt args are preserved
 - behavior is tested
 
@@ -324,7 +324,7 @@ Forking a session is useful when exploring a different path without mutating the
 
 Expected outcome:
 
-- `my-pi fork <id>` forwards `--fork <id>`
+- `tau fork <id>` forwards `--fork <id>`
 - prompt args after the id are preserved
 - README explains the difference between resume and fork
 
@@ -338,13 +338,13 @@ Exporting sessions to HTML makes useful runs easier to review, archive, or share
 
 Expected outcome:
 
-- `my-pi export <session>` forwards `--export <session>`
+- `tau export <session>` forwards `--export <session>`
 - optional output path is supported if Pi supports it
 - docs include one example
 
 ### MYPI-16: Move profiles to config file
 
-Move profile definitions out of `bin/my-pi.js`.
+Move profile definitions out of `bin/tau.js`.
 
 Keep wrapper as executor.
 
@@ -361,7 +361,7 @@ Expected outcome:
 
 ### MYPI-17: Move aliases to config file
 
-Move alias definitions out of `bin/my-pi.js`.
+Move alias definitions out of `bin/tau.js`.
 
 Keep tests focused on external behavior.
 
@@ -377,7 +377,7 @@ Expected outcome:
 
 ### MYPI-18: Add doctor command
 
-Add `my-pi doctor`.
+Add `tau doctor`.
 
 It should check local prerequisites without exposing secrets.
 
@@ -387,7 +387,7 @@ This setup previously had Node, tmux, provider, and env-var issues. A doctor com
 
 Expected outcome:
 
-- `my-pi doctor` prints concise pass/fail checks
+- `tau doctor` prints concise pass/fail checks
 - no secret values are printed
 - command exits non-zero when required checks fail
 
@@ -489,7 +489,7 @@ Useful ideas found there:
 - Pi-to-Pi communication
 - Pi meta-agent for building Pi extensions, prompts, themes, skills, and configs
 
-These are not implemented in `my-pi` yet.
+These are not implemented in `tau` yet.
 
 ### MYPI-23: Add extension runner presets
 
@@ -497,14 +497,14 @@ Add wrapper support for named extension stacks.
 
 Why:
 
-The reference repo treats Pi extensions as reusable harnesses, not one-off flags. `my-pi` should let Bruno run curated stacks without remembering every `-e extensions/*.ts` combination.
+The reference repo treats Pi extensions as reusable harnesses, not one-off flags. `tau` should let Bruno run curated stacks without remembering every `-e extensions/*.ts` combination.
 
 Expected outcome:
 
-- `my-pi ext minimal`
-- `my-pi ext focus`
-- `my-pi ext safe`
-- `my-pi ext team`
+- `tau ext minimal`
+- `tau ext focus`
+- `tau ext safe`
+- `tau ext team`
 - wrapper expands each stack into Pi `-e` flags
 - unknown stacks fail with clear error
 

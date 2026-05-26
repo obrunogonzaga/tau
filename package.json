@@ -1,16 +1,29 @@
 {
-  "name": "my-pi-version",
+  "name": "tau",
   "version": "0.0.1",
   "private": true,
-  "description": "My-only version customization layer for pi CLI",
+  "description": "Tau customization layer for pi CLI",
   "type": "module",
   "bin": {
-    "my-pi": "./bin/my-pi.js"
+    "tau": "./bin/tau.js"
   },
   "scripts": {
     "pi": "pi",
-    "my-pi": "node ./bin/my-pi.js",
+    "tau": "node ./bin/tau.js",
     "setup:pi": "bash ./scripts/setup-pi-settings.sh",
+    "ext:banner": "tau ext banner",
+    "ext:minimal": "tau ext minimal",
+    "ext:focus": "tau ext focus",
+    "ext:safe": "tau ext safe",
+    "ext:team": "tau ext team",
+    "ext:chain": "tau ext chain",
+    "ext:smoke": "npm test -- --test-name-pattern=ext",
+    "changeset": "changeset",
+    "release:version": "changeset version",
+    "release:publish": "changeset publish",
     "test": "node --test"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.31.0"
   }
 }

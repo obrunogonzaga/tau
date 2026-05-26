@@ -1,4 +1,4 @@
-# my-pi operating prompt
+# tau operating prompt
 
 Be concise. Prefer direct action over explanation.
 
