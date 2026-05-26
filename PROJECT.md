@@ -70,10 +70,10 @@ Goal:
 
 ## Milestone 8: Safety and focus extensions
 
-- [ ] MYPI-28 Add purpose gate
-- [ ] MYPI-29 Add task discipline mode
-- [ ] MYPI-30 Add damage-control rules
-- [ ] MYPI-31 Add damage-control continue mode
+- [x] MYPI-28 Add purpose gate
+- [x] MYPI-29 Add task discipline mode
+- [x] MYPI-30 Add damage-control rules
+- [x] MYPI-31 Add damage-control continue mode
 
 ## Milestone 9: Specialist agents and workflows
 

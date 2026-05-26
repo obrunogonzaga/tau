@@ -31,6 +31,9 @@ const formatTools = (toolCounts: Map<string, number>) => {
     .join(' ')
 }
 
+const formatStatuses = (footerData: ReadonlyFooterDataProvider) =>
+  [...footerData.getExtensionStatuses().values()].map((status) => status.replace(/\s+/g, ' ').trim())
+
 class ToolCounterFooter implements Component {
   constructor(
     private readonly ctx: ExtensionContext,
@@ -49,6 +52,7 @@ class ToolCounterFooter implements Component {
       formatContext(this.ctx.getContextUsage()),
       formatCost(this.ctx),
       formatTools(this.toolCounts),
+      ...formatStatuses(this.footerData),
     ]
 
     return [this.theme.fg('dim', parts.join(' | '))]

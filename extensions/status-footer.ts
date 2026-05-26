@@ -20,6 +20,9 @@ const formatModel = (ctx: ExtensionContext) => {
   return `${ctx.model.provider}/${ctx.model.id}`
 }
 
+const formatStatuses = (footerData: ReadonlyFooterDataProvider) =>
+  [...footerData.getExtensionStatuses().values()].map((status) => status.replace(/\s+/g, ' ').trim())
+
 class StatusFooter implements Component {
   constructor(
     private readonly ctx: ExtensionContext,
@@ -29,7 +32,7 @@ class StatusFooter implements Component {
 
   render(): string[] {
     const branch = this.footerData.getGitBranch()
-    const parts = ['tau', formatModel(this.ctx), formatContext(this.ctx.getContextUsage())]
+    const parts = ['tau', formatModel(this.ctx), formatContext(this.ctx.getContextUsage()), ...formatStatuses(this.footerData)]
     if (branch) parts.push(`git ${branch}`)
 
     return [this.theme.fg('dim', parts.join(' | '))]

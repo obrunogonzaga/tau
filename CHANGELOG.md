@@ -35,6 +35,10 @@
 - Add status and tool-counter footer extensions.
 - Add local `.pi/` resource layout.
 - Add npm recipes for extension stacks.
+- Add purpose gate extension with UI prompt, status, widget, and prompt context.
+- Add task discipline extension with pending, in-progress, and done task tracking.
+- Add damage-control extension and `.pi/damage-control-rules.yaml`.
+- Add damage-control continue preset.
 
 ### Changed
 
@@ -49,3 +53,5 @@
 - Keep `github-copilot` limited to explicit `work` profile usage.
 - Move profile and alias definitions out of `bin/tau.js`.
 - Document extension presets and local Pi resource layout.
+- Expand focus and safe extension presets for M8 safety/focus workflows.
+- Show extension status values in Tau custom footers.

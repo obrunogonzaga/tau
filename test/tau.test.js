@@ -116,6 +116,21 @@ test('tau_fastProfile_prependsFastModelArgs', () => {
   assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'tau', 'sessions'))
 })
 
+test('tau_noArgs_loadsTauBanner', () => {
+  const record = runWrapper([])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+  ]))
+})
+
 test('tau_workProfile_prependsCopilotArgs', () => {
   const record = runWrapper(['work', 'ship it'])
 
@@ -178,7 +193,16 @@ test('tau_configFile_containsProfilesAndAliases', () => {
     'review',
     'ship',
   ])
-  assert.deepEqual(Object.keys(config.extensionPresets).sort(), ['banner', 'chain', 'focus', 'minimal', 'safe', 'team'])
+  assert.deepEqual(Object.keys(config.extensionPresets).sort(), [
+    'banner',
+    'chain',
+    'damage',
+    'damage-continue',
+    'focus',
+    'minimal',
+    'safe',
+    'team',
+  ])
 })
 
 test('tau_extBanner_expandsBannerPreset', () => {
@@ -207,6 +231,8 @@ test('tau_extMinimal_expandsExtensionPreset', () => {
     '--thinking',
     'low',
     '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
     extensionPath('status-footer.ts'),
     'focus now',
   ]))
@@ -222,6 +248,10 @@ test('tau_extFocus_expandsStackedExtensionPreset', () => {
     'gpt-5.3-codex-spark',
     '--thinking',
     'low',
+    '-e',
+    extensionPath('purpose-gate.ts'),
+    '-e',
+    extensionPath('task-discipline.ts'),
     '-e',
     extensionPath('pure-focus.ts'),
     '-e',
@@ -241,10 +271,68 @@ test('tau_extSafe_expandsToolCounterPreset', () => {
     '--thinking',
     'low',
     '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
+    extensionPath('purpose-gate.ts'),
+    '-e',
+    extensionPath('task-discipline.ts'),
+    '-e',
+    extensionPath('damage-control.ts'),
+    '-e',
     extensionPath('status-footer.ts'),
     '-e',
     extensionPath('tool-counter-footer.ts'),
+    '--append-system-prompt',
+    'Use purpose and task discipline. Damage control is active; continue with safe alternatives when blocked.',
     'watch tools',
+  ]))
+})
+
+test('tau_extDamage_expandsDamageControlPreset', () => {
+  const record = runWrapper(['ext', 'damage', 'protect this'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
+    extensionPath('damage-control.ts'),
+    '-e',
+    extensionPath('status-footer.ts'),
+    '-e',
+    extensionPath('tool-counter-footer.ts'),
+    '--append-system-prompt',
+    'Damage control active. If a tool is blocked, continue with a safe alternative and explain the smaller next step.',
+    'protect this',
+  ]))
+})
+
+test('tau_extDamageContinue_expandsContinuePrompt', () => {
+  const record = runWrapper(['ext', 'damage-continue', 'keep going'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
+    extensionPath('damage-control.ts'),
+    '-e',
+    extensionPath('status-footer.ts'),
+    '-e',
+    extensionPath('tool-counter-footer.ts'),
+    '--append-system-prompt',
+    'Damage control continue mode. Treat blocks as feedback. Do not stop; choose a safe read-only or narrower alternative.',
+    'keep going',
   ]))
 })
 
@@ -259,10 +347,14 @@ test('tau_extensionStructure_containsLocalPiFolders', () => {
   const requiredPaths = [
     '.pi/agents',
     '.pi/chains',
+    '.pi/damage-control-rules.yaml',
     '.pi/extensions',
     '.pi/rules',
     '.pi/teams',
     '.pi/themes',
+    'extensions/damage-control.ts',
+    'extensions/purpose-gate.ts',
+    'extensions/task-discipline.ts',
     'extensions/tau-banner.ts',
     'extensions/status-footer.ts',
     'extensions/tool-counter-footer.ts',
@@ -271,6 +363,31 @@ test('tau_extensionStructure_containsLocalPiFolders', () => {
   for (const requiredPath of requiredPaths) {
     assert.equal(fs.existsSync(path.join(repoDir, requiredPath)), true, requiredPath)
   }
+})
+
+test('tau_damageControlRules_coverDestructiveAndSensitiveDefaults', () => {
+  const rulesPath = path.join(repoDir, '.pi', 'damage-control-rules.yaml')
+  const rules = fs.readFileSync(rulesPath, 'utf8')
+  const section = (name) => {
+    const lines = rules.split('\n')
+    const start = lines.findIndex((line) => line.trim() === `${name}:`)
+    const rest = lines.slice(start + 1)
+    const items = rest.slice(0, rest.findIndex((line) => /^\S/.test(line)) === -1 ? rest.length : rest.findIndex((line) => /^\S/.test(line)))
+
+    return items
+      .map((line) => line.match(/^\s*-\s*"(.+)"\s*$/)?.[1])
+      .filter(Boolean)
+      .map((rule) => new RegExp(JSON.parse(`"${rule}"`)))
+  }
+
+  const destructiveCommands = section('destructiveCommands')
+  const sensitivePaths = section('sensitivePaths')
+
+  assert.equal(destructiveCommands.some((rule) => rule.test('rm -rf dist')), true)
+  assert.equal(destructiveCommands.some((rule) => rule.test('git reset --hard HEAD')), true)
+  assert.equal(sensitivePaths.some((rule) => rule.test('/Users/me/.ssh/id_ed25519')), true)
+  assert.equal(sensitivePaths.some((rule) => rule.test('/repo/.env.local')), true)
+  assert.equal(sensitivePaths.some((rule) => rule.test('/repo/src/index.ts')), false)
 })
 
 test('tau_askAlias_usesPrintMode', () => {

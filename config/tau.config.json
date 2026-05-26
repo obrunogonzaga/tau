@@ -94,23 +94,41 @@
       "profile": "fast"
     },
     "chain": {
-      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
+      "extensions": ["tau-banner.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"
     },
+    "damage": {
+      "extensions": ["tau-banner.ts", "damage-control.ts", "status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast",
+      "prompt": "Damage control active. If a tool is blocked, continue with a safe alternative and explain the smaller next step."
+    },
+    "damage-continue": {
+      "extensions": ["tau-banner.ts", "damage-control.ts", "status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast",
+      "prompt": "Damage control continue mode. Treat blocks as feedback. Do not stop; choose a safe read-only or narrower alternative."
+    },
     "focus": {
-      "extensions": ["pure-focus.ts", "status-footer.ts"],
+      "extensions": ["purpose-gate.ts", "task-discipline.ts", "pure-focus.ts", "status-footer.ts"],
       "profile": "fast"
     },
     "minimal": {
-      "extensions": ["status-footer.ts"],
+      "extensions": ["tau-banner.ts", "status-footer.ts"],
       "profile": "fast"
     },
     "safe": {
-      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
-      "profile": "fast"
+      "extensions": [
+        "tau-banner.ts",
+        "purpose-gate.ts",
+        "task-discipline.ts",
+        "damage-control.ts",
+        "status-footer.ts",
+        "tool-counter-footer.ts"
+      ],
+      "profile": "fast",
+      "prompt": "Use purpose and task discipline. Damage control is active; continue with safe alternatives when blocked."
     },
     "team": {
-      "extensions": ["status-footer.ts", "tool-counter-footer.ts"],
+      "extensions": ["tau-banner.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"
     }
   }

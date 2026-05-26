@@ -20,6 +20,7 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
    - `npm run pi`
 3. Start with default wrapper:
    - `npm run tau`
+   - Starts with the Tau banner.
 4. Start with fast profile:
    - `tau fast "summarize this repo"`
 5. Start with work profile:
@@ -138,22 +139,31 @@ Required check failure exits non-zero. Missing provider keys are warnings.
 
 ## Extensions
 
-- `tau ext minimal`: loads `status-footer`.
+- `tau ext minimal`: loads `tau-banner` + `status-footer`.
 - `tau ext banner`: loads `tau-banner`.
-- `tau ext focus`: loads `pure-focus` + `status-footer`.
-- `tau ext safe`: loads `status-footer` + `tool-counter-footer`.
-- `tau ext team`: loads `status-footer` + `tool-counter-footer`.
-- `tau ext chain`: loads `status-footer` + `tool-counter-footer`.
+- `tau ext focus`: loads `purpose-gate` + `task-discipline` + `pure-focus` + `status-footer`.
+- `tau ext safe`: loads `tau-banner` + `purpose-gate` + `task-discipline` + `damage-control` + status/tool-counter footers.
+- `tau ext damage`: loads `tau-banner` + `damage-control` + status/tool-counter footers.
+- `tau ext damage-continue`: same as `damage`, with continue-safe prompt guidance.
+- `tau ext team`: loads `tau-banner` + `status-footer` + `tool-counter-footer`.
+- `tau ext chain`: loads `tau-banner` + `status-footer` + `tool-counter-footer`.
+- `purpose-gate`: asks for a session purpose in UI, shows it in widget/status/footer, and appends it to the turn system prompt.
+- `task-discipline`: adds `/task add`, `/task start`, `/task done`, `/task set`, and `/task list`.
+- `damage-control`: blocks destructive shell commands and sensitive path reads from `.pi/damage-control-rules.yaml`.
 - `pure-focus`: hides header, footer, working row, and status labels.
 - `tau-banner`: replaces the default Pi header with a compact Tau banner.
 - `status-footer`: one-line model, context, and branch footer.
 - `tool-counter-footer`: one-line cwd, branch, model, context, cost placeholder, and per-tool counts.
 - Set `quietStartup: true` in settings to hide loaded resource lists too.
+- Plain `tau` loads `tau-banner`; `tau ext focus` does not because it uses `pure-focus`.
 
 Commands:
 
 - `tau ext minimal "focus"`
 - `tau ext banner`
+- `tau ext safe "ship with purpose and task tracking"`
+- `tau ext damage "inspect without destructive commands"`
+- `tau ext damage-continue "continue after a blocked command"`
 - `tau router -e extensions/pure-focus.ts "focus"`
 - `npm run ext:banner`
 - `npm run ext:minimal`
@@ -172,6 +182,21 @@ Layout:
 - `.pi/chains/`: sequential workflow definitions.
 - `.pi/themes/`: local TUI themes.
 - `.pi/rules/`: local policy and safety notes.
+- `.pi/damage-control-rules.yaml`: blocked command and sensitive path regexes.
+
+Task commands:
+
+- `/purpose finish M8`
+- `/task add implement purpose gate`
+- `/task start 1`
+- `/task done 1`
+- `/task set 1 pending`
+- `/task list`
+
+Damage-control feedback:
+
+- Blocked commands return a safe next step instead of stopping the session.
+- Edit `.pi/damage-control-rules.yaml` to tune blocked shell regexes and sensitive path regexes.
 
 ### Wrapper knobs
 

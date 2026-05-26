@@ -1,0 +1,15 @@
+destructiveCommands:
+  - "\\brm\\s+(-[^\\s]*[rf][^\\s]*|-[^\\s]*[fr][^\\s]*)\\b"
+  - "\\bgit\\s+reset\\s+--hard\\b"
+  - "\\bgit\\s+clean\\s+-[^\\s]*f"
+  - "\\bdd\\s+if="
+  - "\\bmkfs(\\.|\\b)"
+  - "\\bchmod\\s+-R\\s+777\\b"
+
+sensitivePaths:
+  - "(^|/)\\.env(\\.|$|/)?"
+  - "(^|/)\\.ssh(/|$)"
+  - "(^|/)\\.aws(/|$)"
+  - "(^|/)\\.gnupg(/|$)"
+  - "(^|/)id_rsa$"
+  - "(^|/)id_ed25519$"

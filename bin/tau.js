@@ -56,6 +56,9 @@ const validateExtensionPreset = (name, preset, profiles) => {
   if (preset.extensions.some((extension) => !hasText(extension))) {
     throw new Error(`Invalid config: extension preset ${name} has invalid extension`)
   }
+  if (preset.prompt !== undefined && !hasText(preset.prompt)) {
+    throw new Error(`Invalid config: extension preset ${name} has invalid prompt`)
+  }
 }
 
 const validateConfig = (config) => {
@@ -130,13 +133,20 @@ const resolveArgs = (config, rawInputArgs) => {
   const { args: inputArgs, profileName } = extractProfile(config, rawInputArgs)
   const [firstArg, ...restArgs] = inputArgs
 
+  if (!firstArg) {
+    const selectedProfile = profileName ?? config.defaultProfile
+
+    return [...profileArgs(config, selectedProfile), ...extensionArgs(['tau-banner.ts'])]
+  }
+
   if (firstArg === 'ext') {
     const [presetName, ...presetRestArgs] = restArgs
     const preset = config.extensionPresets[presetName]
     if (!preset) throw new Error(`Unknown extension preset: ${presetName ?? ''}`)
     const selectedProfile = profileName ?? preset.profile
+    const promptArgs = shouldAppendPrompt() && preset.prompt ? ['--append-system-prompt', preset.prompt] : []
 
-    return [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...presetRestArgs]
+    return [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...promptArgs, ...presetRestArgs]
   }
 
   if (config.aliases[firstArg]) {
