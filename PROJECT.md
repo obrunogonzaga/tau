@@ -84,11 +84,11 @@ Goal:
 
 ## Milestone 10: Advanced orchestration
 
-- [ ] MYPI-36 Add subagent mode
-- [ ] MYPI-37 Add session replay
-- [ ] MYPI-38 Add cross-agent command loader
-- [ ] MYPI-39 Research Pi-to-Pi communication
-- [ ] MYPI-40 Research meta-agent builder
+- [x] MYPI-36 Add subagent mode
+- [x] MYPI-37 Add session replay
+- [x] MYPI-38 Add cross-agent command loader
+- [x] MYPI-39 Research Pi-to-Pi communication
+- [x] MYPI-40 Research meta-agent builder
 
 ## Issues
 

@@ -14,6 +14,7 @@
     "ext:banner": "tau ext banner",
     "ext:minimal": "tau ext minimal",
     "ext:focus": "tau ext focus",
+    "ext:orchestrate": "tau ext orchestrate",
     "ext:safe": "tau ext safe",
     "ext:team": "tau ext team",
     "ext:chain": "tau ext chain",

@@ -229,6 +229,7 @@ test('tau_configFile_containsProfilesAndAliases', () => {
     'damage-continue',
     'focus',
     'minimal',
+    'orchestrate',
     'safe',
     'team',
   ])
@@ -450,6 +451,93 @@ test('tau_extTeamAndChain_loadPersonaSelector', () => {
 
   assert.equal(teamRecord.args.includes(extensionPath('persona-selector.ts')), true)
   assert.equal(chainRecord.args.includes(extensionPath('persona-selector.ts')), true)
+})
+
+test('tau_extOrchestrate_loadsAdvancedOrchestrationExtensions', () => {
+  const record = runWrapper(['ext', 'orchestrate', 'coordinate this'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
+    extensionPath('subagent-mode.ts'),
+    '-e',
+    extensionPath('session-replay.ts'),
+    '-e',
+    extensionPath('cross-agent-loader.ts'),
+    '-e',
+    extensionPath('status-footer.ts'),
+    '-e',
+    extensionPath('tool-counter-footer.ts'),
+    '--append-system-prompt',
+    'Advanced orchestration active. Use /sub for isolated background research, /replay for audit timeline, and /xload to inspect safe cross-agent assets.',
+    'coordinate this',
+  ]))
+})
+
+test('tau_orchestrationExtensions_registerRequiredCommands', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
+  const loader = fs.readFileSync(path.join(repoDir, 'extensions', 'cross-agent-loader.ts'), 'utf8')
+
+  assert.match(subagent, /registerCommand\('sub'/)
+  assert.match(subagent, /tools:\s*\[\s*'read',\s*'grep',\s*'find',\s*'ls'\s*\]/)
+  assert.match(subagent, /status:\s*'running'/)
+  assert.match(subagent, /status:\s*'done'/)
+  assert.match(subagent, /status:\s*'error'/)
+  assert.match(subagent, /sendMessage/)
+  assert.match(replay, /registerCommand\('replay'/)
+  assert.match(replay, /message\.role === 'user'/)
+  assert.match(replay, /message\.role === 'assistant'/)
+  assert.match(replay, /tool_execution_start/)
+  assert.match(replay, /next|prev|all/)
+  assert.match(replay, /SENSITIVE_KEY/)
+  assert.match(replay, /LEAKY_PATTERN/)
+  assert.match(replay, /redactValue\(event\.args\)/)
+  assert.match(loader, /registerCommand\('xload'/)
+  assert.match(loader, /\.claude/)
+  assert.match(loader, /\.gemini/)
+  assert.match(loader, /\.codex/)
+  assert.match(loader, /\.pi/)
+  assert.match(loader, /SECRET_FILE_PATTERN/)
+  assert.match(loader, /BLOCKED_DIRS/)
+  assert.match(loader, /toLowerCase\(\)\.includes\(filter\)/)
+})
+
+test('tau_orchestrationResearchDocuments_recordM10Decisions', () => {
+  const piToPi = fs.readFileSync(path.join(repoDir, '.pi', 'research', 'pi-to-pi-communication.md'), 'utf8')
+  const metaAgent = fs.readFileSync(path.join(repoDir, '.pi', 'research', 'meta-agent-builder.md'), 'utf8')
+
+  assert.match(piToPi, /Decision: local-only first/)
+  assert.match(piToPi, /Security model/)
+  assert.match(piToPi, /Auth\/token handling/)
+  assert.match(piToPi, /Minimal workflow/)
+  assert.match(metaAgent, /First meta-agent scope/)
+  assert.match(metaAgent, /Experts/)
+  assert.match(metaAgent, /Docs lookup/)
+  assert.match(metaAgent, /Smoke checks/)
+  assert.match(metaAgent, /Review before activation/)
+})
+
+test('tau_orchestrationUi_keepsLongOutputOutOfBelowEditorWidget', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
+
+  assert.doesNotMatch(subagent, /setWidget\(SUBAGENT_KEY/)
+  assert.doesNotMatch(replay, /setWidget\('tau-replay'/)
+})
+
+test('tau_replay_filtersThinkingBlocks', () => {
+  const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
+
+  assert.match(replay, /type === 'thinking'/)
+  assert.match(replay, /filter\(Boolean\)/)
 })
 
 test('tau_personaSelector_registersSystemCommandAndStatus', () => {

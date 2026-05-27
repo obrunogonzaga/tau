@@ -115,6 +115,18 @@
       "extensions": ["tau-banner.ts", "status-footer.ts"],
       "profile": "fast"
     },
+    "orchestrate": {
+      "extensions": [
+        "tau-banner.ts",
+        "subagent-mode.ts",
+        "session-replay.ts",
+        "cross-agent-loader.ts",
+        "status-footer.ts",
+        "tool-counter-footer.ts"
+      ],
+      "profile": "fast",
+      "prompt": "Advanced orchestration active. Use /sub for isolated background research, /replay for audit timeline, and /xload to inspect safe cross-agent assets."
+    },
     "safe": {
       "extensions": [
         "tau-banner.ts",

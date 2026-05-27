@@ -33,6 +33,8 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
    - `tau doctor`
 9. Run an extension preset:
    - `tau ext minimal "focus"`
+10. Start orchestration mode:
+   - `tau ext orchestrate "coordinate this"`
 
 ## Profiles
 
@@ -147,10 +149,14 @@ Required check failure exits non-zero. Missing provider keys are warnings.
 - `tau ext damage-continue`: same as `damage`, with continue-safe prompt guidance.
 - `tau ext team`: loads `tau-banner` + `persona-selector` + status/tool-counter footers.
 - `tau ext chain`: loads `tau-banner` + `persona-selector` + status/tool-counter footers.
+- `tau ext orchestrate`: loads `tau-banner` + `subagent-mode` + `session-replay` + `cross-agent-loader` + status/tool-counter footers.
 - `purpose-gate`: asks for a session purpose in UI, shows it in widget/status/footer, and appends it to the turn system prompt.
 - `task-discipline`: adds `/task add`, `/task start`, `/task done`, `/task set`, and `/task list`.
 - `damage-control`: blocks destructive shell commands and sensitive path reads from `.pi/damage-control-rules.yaml`.
 - `persona-selector`: adds `/system`, lists local personas, appends the selected persona to future system prompts, and shows it in status/footer.
+- `subagent-mode`: adds `/sub <task>` background runs with limited default tools: `read,grep,find,ls`.
+- `session-replay`: adds `/replay`, `/replay next`, `/replay prev`, and `/replay all` timeline output.
+- `cross-agent-loader`: adds `/xload` to list safe `.claude`, `.gemini`, `.codex`, and `.pi` commands, agents, skills, and assets.
 - `pure-focus`: hides header, footer, working row, and status labels.
 - `tau-banner`: replaces the default Pi header with a compact Tau banner.
 - `status-footer`: one-line model, context, and branch footer.
@@ -167,10 +173,12 @@ Commands:
 - `tau ext damage-continue "continue after a blocked command"`
 - `tau ext team "ship this with persona switching"`
 - `tau ext chain "run plan build review"`
+- `tau ext orchestrate "scan docs in a subagent"`
 - `tau router -e extensions/pure-focus.ts "focus"`
 - `npm run ext:banner`
 - `npm run ext:minimal`
 - `npm run ext:focus`
+- `npm run ext:orchestrate`
 - `npm run ext:safe`
 - `npm run ext:team`
 - `npm run ext:chain`
@@ -187,6 +195,7 @@ Layout:
 - `.pi/chains/`: chain docs and pointers.
 - `.pi/themes/`: local TUI themes.
 - `.pi/rules/`: local policy and safety notes.
+- `.pi/research/`: approved research notes before implementation.
 - `.pi/damage-control-rules.yaml`: blocked command and sensitive path regexes.
 
 Task commands:
@@ -200,6 +209,12 @@ Task commands:
 - `/task done 1`
 - `/task set 1 pending`
 - `/task list`
+- `/sub inspect docs for missing command examples`
+- `/replay all`
+- `/replay next`
+- `/replay prev`
+- `/xload`
+- `/xload agent`
 
 Agent files:
 
