@@ -13,6 +13,7 @@ const AGENT_DIRS = ['.claude', '.gemini', '.codex', '.pi']
 const SECRET_FILE_PATTERN = /(^|\/)(\.env|auth|token|secret|credentials|key|history|sessions?|logs?|cache)(\.|\/|$)/i
 const SAFE_EXTENSIONS = new Set(['.md', '.markdown', '.yaml', '.yml', '.json'])
 const BLOCKED_DIRS = ['/node_modules/', '/.git/', '/.ssh/', '/.cache/', '/Library/', '/AppData/']
+const DEFAULT_LIMIT = 20
 
 const uniqueRoots = (cwd: string) => [...new Set([cwd, os.homedir()])]
 
@@ -60,29 +61,56 @@ const discover = (cwd: string): Discovery[] =>
     ),
   )
 
-const render = (items: Discovery[]) => {
+const summarizeKindCounts = (items: Discovery[]) => {
+  const counts = new Map<string, number>()
+  for (const item of items) {
+    counts.set(item.kind, (counts.get(item.kind) ?? 0) + 1)
+  }
+
+  return [...counts.entries()]
+    .map(([kind, value]) => `${kind}:${value}`)
+    .sort()
+    .join(' ')
+}
+
+const renderSlice = (items: Discovery[], start: number, limit: number) => {
   if (items.length === 0) return 'xload none'
 
-  return items
-    .sort((left, right) => `${left.kind}:${left.title}`.localeCompare(`${right.kind}:${right.title}`))
-    .map((item) => `${item.kind} ${item.title} ${item.source}`)
-    .join('\n')
+  const ordered = [...items].sort((left, right) => `${left.kind}:${left.title}`.localeCompare(`${right.kind}:${right.title}`))
+  const page = ordered.slice(start, start + limit)
+  const lines = [
+    `xload ${items.length} items`,
+    `kinds: ${summarizeKindCounts(items)}`,
+    `showing ${start + 1}-${start + page.length} ${items.length > limit ? '(use /xload more)' : ''}`,
+  ].filter(Boolean)
+
+  for (const item of page) {
+    const index = ordered.indexOf(item) + 1
+    lines.push(`${index}. [${item.kind}] ${item.title}`)
+    lines.push(`   ${item.source}`)
+  }
+
+  return lines.join('\n')
 }
 
 export default function crossAgentLoader(pi: ExtensionAPI) {
+  let offset = 0
+
   pi.registerCommand('xload', {
     description: 'List safe cross-agent commands, agents, skills, and assets',
     handler: async (args, ctx) => {
-      const filter = args.trim().toLowerCase()
-      const items = discover(ctx.cwd).filter(
-        (item) =>
-          !filter || item.kind === filter || item.title.toLowerCase().includes(filter),
-      )
-      const output = render(items)
+      const action = args.trim().toLowerCase()
+      const isMore = action === 'more'
+      const filter = isMore ? '' : action
+      const items = discover(ctx.cwd)
+        .filter((item) => !filter || item.kind === filter || item.title.toLowerCase().includes(filter))
 
+      if (!isMore) offset = 0
+      else if (offset + DEFAULT_LIMIT < items.length) offset += DEFAULT_LIMIT
+
+      const output = renderSlice(items, offset, DEFAULT_LIMIT)
       pi.appendEntry('tau-cross-agent-loader', { count: items.length, items })
       ctx.ui.notify(output)
-      ctx.ui.setWidget('tau-cross-agent-loader', output.split('\n'), { placement: 'belowEditor' })
     },
   })
 }

@@ -123,7 +123,7 @@ Edit `config/tau.config.json` to change profiles, aliases, task prompts, and pro
 - `profiles.router.models`: exact model cycling list.
 - `aliases`: command presets with profile, extra args, and optional prompt.
 - `extensionPresets`: named `tau ext` stacks.
-- `providerKeys`: env var names checked by provider, values never printed.
+- `providerKeys`: env var names checked by provider, values never printed. Use `[]` for providers that authenticate via session/login flow (no env token required). Ex.: default atual em `config/tau.config.json` usa `openai-codex: []` para login-based.
 
 Use `TAU_CONFIG_PATH=./other-config.json tau ...` to test another config.
 
@@ -260,6 +260,8 @@ Damage-control feedback:
 - `TAU_CONFIG_PATH`: path to a custom wrapper config.
 - `TAU_BANNER`: custom banner text (set to `0` to disable).
 - `TAU_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
+- `TAU_SKIP_AUTH_CHECK=1`: skip wrapper-level provider auth preflight (useful when auth is session-based/OAuth).
+- `TAU_SUBAGENT_MAX_PREVIEW=<n>`: control preview truncation for `/sub` results (default: 1200 chars).
 - Logs: minimal startup logs are written to `<config-dir>/tau/logs/pi-YYYY-MM-DD.log`.
 - Sessions: `tau` stores sessions in `~/.pi/tau/sessions`.
 
@@ -268,6 +270,8 @@ Examples:
 - `TAU_SETTINGS_PATH=./profiles/dev.json npm run tau`
 - `TAU_BANNER=my-ops-pi npm run tau`
 - `TAU_NO_PROMPT=1 tau ask "raw upstream behavior"`
+- `TAU_SKIP_AUTH_CHECK=1 tau`
+- `TAU_SUBAGENT_MAX_PREVIEW=4000 tau ext orchestrate "coordenar revisao de arquitetura"`
 
 ## Versioning
 

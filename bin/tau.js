@@ -38,6 +38,9 @@ const validateProfile = (name, profile, profiles) => {
   if (!profile || !hasText(profile.id) || !hasText(profile.thinking)) {
     throw new Error(`Invalid config: profile ${name} requires id and thinking`)
   }
+  if (!profile.id.includes('/')) {
+    throw new Error(`Invalid config: profile ${name} id must be <provider>/<model>`)
+  }
   if (profile.models?.some((modelName) => !profiles[modelName])) {
     throw new Error(`Invalid config: profile ${name} has unknown model reference`)
   }
@@ -123,6 +126,11 @@ const extractProfile = (config, args) => {
 
 const resolvePromptPath = () => resolveRepoPath('prompts', 'system-prompt.md')
 
+const shouldSkipAuthCheck = () => {
+  const value = process.env.TAU_SKIP_AUTH_CHECK
+  return value === '1' || value?.toLowerCase() === 'true'
+}
+
 const shouldAppendPrompt = () => process.env.TAU_NO_PROMPT !== '1'
 
 const readPrompt = () => fs.readFileSync(resolvePromptPath(), 'utf8').trim()
@@ -136,7 +144,10 @@ const resolveArgs = (config, rawInputArgs) => {
   if (!firstArg) {
     const selectedProfile = profileName ?? config.defaultProfile
 
-    return [...profileArgs(config, selectedProfile), ...extensionArgs(['tau-banner.ts'])]
+    return {
+      args: [...profileArgs(config, selectedProfile), ...extensionArgs(['tau-banner.ts'])],
+      profileName: selectedProfile,
+    }
   }
 
   if (firstArg === 'ext') {
@@ -146,7 +157,10 @@ const resolveArgs = (config, rawInputArgs) => {
     const selectedProfile = profileName ?? preset.profile
     const promptArgs = shouldAppendPrompt() && preset.prompt ? ['--append-system-prompt', preset.prompt] : []
 
-    return [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...promptArgs, ...presetRestArgs]
+    return {
+      args: [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...promptArgs, ...presetRestArgs],
+      profileName: selectedProfile,
+    }
   }
 
   if (config.aliases[firstArg]) {
@@ -154,15 +168,24 @@ const resolveArgs = (config, rawInputArgs) => {
     const selectedProfile = profileName ?? alias.profile
     const promptArgs = shouldAppendPrompt() && alias.prompt ? ['--append-system-prompt', alias.prompt] : []
 
-    return [...profileArgs(config, selectedProfile), ...alias.extras, ...promptArgs, ...restArgs]
+    return {
+      args: [...profileArgs(config, selectedProfile), ...alias.extras, ...promptArgs, ...restArgs],
+      profileName: selectedProfile,
+    }
   }
 
   const resolvedProfileName = profileName ?? firstArg
   if (!config.profiles[resolvedProfileName]) {
-    return [...profileArgs(config, config.defaultProfile), firstArg, ...restArgs].filter((arg) => arg !== undefined)
+    return {
+      args: [...profileArgs(config, config.defaultProfile), firstArg, ...restArgs].filter((arg) => arg !== undefined),
+      profileName: config.defaultProfile,
+    }
   }
 
-  return [...profileArgs(config, resolvedProfileName), ...(profileName ? inputArgs : restArgs)]
+  return {
+    args: [...profileArgs(config, resolvedProfileName), ...(profileName ? inputArgs : restArgs)],
+    profileName: resolvedProfileName,
+  }
 }
 
 const HOME_DIR = os.homedir()
@@ -215,15 +238,50 @@ const checkTmux = () => {
 }
 
 const checkProviderKeys = (provider, names) => {
+  if (!Array.isArray(names)) {
+    printCheck('warn', `key ${provider}`, 'mapping missing')
+    return
+  }
+
+  if (names.length === 0) {
+    printCheck('ok', `key ${provider}`, 'tokenless/login mode')
+    return
+  }
+
   const present = names.some((name) => Boolean(process.env[name]))
   printCheck(present ? 'ok' : 'warn', `key ${provider}`, present ? 'present' : 'missing')
-  return true
 }
 
 const runRequiredCheck = (name, check) => {
   const result = check()
   printCheck(result.status ?? (result.ok ? 'ok' : 'fail'), name, result.detail)
   return result.ok
+}
+
+const resolveProviderFromProfile = (config, profileName) => {
+  const profile = config.profiles[profileName]
+  if (!profile) throw new Error(`Invalid config: unknown profile ${profileName}`)
+
+  const { provider } = splitModelId(profile.id)
+  return provider
+}
+
+const requireAuthForProfile = (config, profileName) => {
+  const provider = resolveProviderFromProfile(config, profileName)
+  const names = config.providerKeys?.[provider]
+
+  if (!Array.isArray(names)) {
+    throw new Error(`Missing auth mapping: no provider key names configured for ${provider}`)
+  }
+
+  if (names.length === 0) {
+    return
+  }
+
+  const hasAuth = names.some((name) => Boolean(process.env[name]))
+  if (!hasAuth) {
+    throw new Error(`missing authentication for provider ${provider}. Set one of: ${names.join(', ')}`)
+  }
 }
 
 const runDoctor = (config) => {
@@ -240,11 +298,17 @@ const runDoctor = (config) => {
 
 let args
 let config
+let selectedProfileName
 
 try {
   config = loadConfig()
   if (rawArgs[0] === 'doctor') process.exit(runDoctor(config))
-  args = resolveArgs(config, rawArgs)
+  const resolved = resolveArgs(config, rawArgs)
+  args = resolved.args
+  selectedProfileName = resolved.profileName
+  if (!shouldSkipAuthCheck()) {
+    requireAuthForProfile(config, selectedProfileName)
+  }
   if (shouldAppendPrompt()) args = appendSystemPrompt(args, readPrompt())
 } catch (error) {
   console.error(`[tau] ${error.message}`)
