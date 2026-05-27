@@ -39,6 +39,8 @@
 - Add task discipline extension with pending, in-progress, and done task tracking.
 - Add damage-control extension and `.pi/damage-control-rules.yaml`.
 - Add damage-control continue preset.
+- Add local specialist agents, teams, and chain workflow definitions.
+- Add persona selector extension with `/system` and status/footer visibility.
 
 ### Changed
 
@@ -55,3 +57,4 @@
 - Document extension presets and local Pi resource layout.
 - Expand focus and safe extension presets for M8 safety/focus workflows.
 - Show extension status values in Tau custom footers.
+- Expand `team` and `chain` extension presets with persona switching.

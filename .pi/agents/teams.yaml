@@ -1,0 +1,24 @@
+teams:
+  full:
+    - scout
+    - planner
+    - plan-reviewer
+    - builder
+    - reviewer
+    - documenter
+  plan-build:
+    - planner
+    - builder
+    - reviewer
+  info:
+    - scout
+    - documenter
+  frontend:
+    - planner
+    - builder
+    - reviewer
+    - documenter
+  security:
+    - scout
+    - red-team
+    - reviewer

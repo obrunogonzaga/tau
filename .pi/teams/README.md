@@ -1,3 +1,3 @@
 # Teams
 
-Team workflow definitions live here.
+Team workflow definitions live in `.pi/agents/teams.yaml`.

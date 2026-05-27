@@ -94,7 +94,7 @@
       "profile": "fast"
     },
     "chain": {
-      "extensions": ["tau-banner.ts", "status-footer.ts", "tool-counter-footer.ts"],
+      "extensions": ["tau-banner.ts", "persona-selector.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"
     },
     "damage": {
@@ -128,7 +128,7 @@
       "prompt": "Use purpose and task discipline. Damage control is active; continue with safe alternatives when blocked."
     },
     "team": {
-      "extensions": ["tau-banner.ts", "status-footer.ts", "tool-counter-footer.ts"],
+      "extensions": ["tau-banner.ts", "persona-selector.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"
     }
   }

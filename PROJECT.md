@@ -77,10 +77,10 @@ Goal:
 
 ## Milestone 9: Specialist agents and workflows
 
-- [ ] MYPI-32 Add specialist agent definitions
-- [ ] MYPI-33 Add team definitions
-- [ ] MYPI-34 Add chain workflow definitions
-- [ ] MYPI-35 Add system persona selector
+- [x] MYPI-32 Add specialist agent definitions
+- [x] MYPI-33 Add team definitions
+- [x] MYPI-34 Add chain workflow definitions
+- [x] MYPI-35 Add system persona selector
 
 ## Milestone 10: Advanced orchestration
 

@@ -1,0 +1,30 @@
+# Prompt templates support:
+# - $INPUT: current chain input or previous step result.
+# - $ORIGINAL: original user request that started the chain.
+chains:
+  plan-build-review:
+    steps:
+      - agent: planner
+        prompt: "Plan this scoped request: $INPUT"
+      - agent: builder
+        prompt: "Implement the approved plan for: $INPUT"
+      - agent: reviewer
+        prompt: "Review the implementation against the original request: $ORIGINAL"
+  scout-plan-build-review:
+    steps:
+      - agent: scout
+        prompt: "Inspect repo state for: $INPUT"
+      - agent: planner
+        prompt: "Plan using scout findings. Original request: $ORIGINAL. Findings: $INPUT"
+      - agent: builder
+        prompt: "Implement the plan for: $INPUT"
+      - agent: reviewer
+        prompt: "Review implementation and tests for: $ORIGINAL"
+  plan-review-plan:
+    steps:
+      - agent: planner
+        prompt: "Draft a plan for: $INPUT"
+      - agent: plan-reviewer
+        prompt: "Challenge this plan against the original request: $ORIGINAL. Plan: $INPUT"
+      - agent: planner
+        prompt: "Revise the plan using review feedback: $INPUT"

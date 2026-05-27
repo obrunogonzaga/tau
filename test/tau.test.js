@@ -13,6 +13,7 @@ const systemPrompt = fs.readFileSync(promptPath, 'utf8').trim()
 const config = JSON.parse(fs.readFileSync(configPath, 'utf8'))
 const dailyModels = 'openai-codex/gpt-5.3-codex-spark:low,openai-codex/gpt-5.5:xhigh'
 const extensionPath = (name) => path.join(repoDir, 'extensions', name)
+const agentNames = ['builder', 'documenter', 'plan-reviewer', 'planner', 'red-team', 'reviewer', 'scout']
 
 const withSystemPrompt = (args) => ['--append-system-prompt', systemPrompt, ...args]
 
@@ -98,6 +99,34 @@ const runWrapper = (args) => {
   assert.equal(result.status, 0)
 
   return record
+}
+
+const readProjectYaml = (filePath) => fs.readFileSync(path.join(repoDir, filePath), 'utf8')
+
+const parseYamlListBlock = (content, name) => {
+  const lines = content.split('\n')
+  const start = lines.findIndex((line) => line === `  ${name}:`)
+  if (start === -1) return []
+  const block = []
+  for (const line of lines.slice(start + 1)) {
+    if (/^  \S/.test(line)) break
+    block.push(line)
+  }
+
+  return block.map((line) => line.match(/^    - ([a-z-]+)$/)?.[1]).filter(Boolean)
+}
+
+const parseChainAgents = (content, name) => {
+  const lines = content.split('\n')
+  const start = lines.findIndex((line) => line === `  ${name}:`)
+  if (start === -1) return []
+  const block = []
+  for (const line of lines.slice(start + 1)) {
+    if (/^  \S/.test(line)) break
+    block.push(line)
+  }
+
+  return block.map((line) => line.match(/^      - agent: ([a-z-]+)$/)?.[1]).filter(Boolean)
 }
 
 test('tau_fastProfile_prependsFastModelArgs', () => {
@@ -346,6 +375,8 @@ test('tau_extUnknownPreset_failsFast', () => {
 test('tau_extensionStructure_containsLocalPiFolders', () => {
   const requiredPaths = [
     '.pi/agents',
+    '.pi/agents/agent-chain.yaml',
+    '.pi/agents/teams.yaml',
     '.pi/chains',
     '.pi/damage-control-rules.yaml',
     '.pi/extensions',
@@ -353,6 +384,7 @@ test('tau_extensionStructure_containsLocalPiFolders', () => {
     '.pi/teams',
     '.pi/themes',
     'extensions/damage-control.ts',
+    'extensions/persona-selector.ts',
     'extensions/purpose-gate.ts',
     'extensions/task-discipline.ts',
     'extensions/tau-banner.ts',
@@ -363,6 +395,70 @@ test('tau_extensionStructure_containsLocalPiFolders', () => {
   for (const requiredPath of requiredPaths) {
     assert.equal(fs.existsSync(path.join(repoDir, requiredPath)), true, requiredPath)
   }
+})
+
+test('tau_specialistAgents_existWithRequiredSections', () => {
+  for (const name of agentNames) {
+    const agentPath = path.join(repoDir, '.pi', 'agents', `${name}.md`)
+    const content = fs.readFileSync(agentPath, 'utf8')
+
+    assert.match(content, /^## Role$/m, name)
+    assert.match(content, /^## Limits$/m, name)
+    assert.match(content, /^## Work Mode$/m, name)
+    assert.match(content, /^## Output$/m, name)
+  }
+})
+
+test('tau_specialistAgents_keepScoutAndPlannerNoEdit', () => {
+  for (const name of ['scout', 'planner']) {
+    const content = fs.readFileSync(path.join(repoDir, '.pi', 'agents', `${name}.md`), 'utf8')
+
+    assert.match(content, /no-edit/i, name)
+    assert.match(content, /do not edit/i, name)
+  }
+})
+
+test('tau_teamDefinitions_referenceExistingAgents', () => {
+  const teams = readProjectYaml('.pi/agents/teams.yaml')
+  const expectedTeams = ['frontend', 'full', 'info', 'plan-build', 'security']
+
+  for (const team of expectedTeams) {
+    const members = parseYamlListBlock(teams, team)
+
+    assert.notEqual(members.length, 0, team)
+    for (const member of members) assert.equal(agentNames.includes(member), true, `${team}:${member}`)
+  }
+})
+
+test('tau_chainDefinitions_referenceExistingAgentsAndPromptTemplates', () => {
+  const chains = readProjectYaml('.pi/agents/agent-chain.yaml')
+  const expectedChains = ['plan-build-review', 'plan-review-plan', 'scout-plan-build-review']
+
+  for (const chain of expectedChains) {
+    const members = parseChainAgents(chains, chain)
+
+    assert.notEqual(members.length, 0, chain)
+    for (const member of members) assert.equal(agentNames.includes(member), true, `${chain}:${member}`)
+  }
+  assert.match(chains, /\$INPUT/)
+  assert.match(chains, /\$ORIGINAL/)
+})
+
+test('tau_extTeamAndChain_loadPersonaSelector', () => {
+  const teamRecord = runWrapper(['ext', 'team', 'plan this'])
+  const chainRecord = runWrapper(['ext', 'chain', 'ship this'])
+
+  assert.equal(teamRecord.args.includes(extensionPath('persona-selector.ts')), true)
+  assert.equal(chainRecord.args.includes(extensionPath('persona-selector.ts')), true)
+})
+
+test('tau_personaSelector_registersSystemCommandAndStatus', () => {
+  const content = fs.readFileSync(path.join(repoDir, 'extensions', 'persona-selector.ts'), 'utf8')
+
+  assert.match(content, /registerCommand\('system'/)
+  assert.match(content, /before_agent_start/)
+  assert.match(content, /setStatus/)
+  assert.match(content, /system persona/)
 })
 
 test('tau_damageControlRules_coverDestructiveAndSensitiveDefaults', () => {

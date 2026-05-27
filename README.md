@@ -145,11 +145,12 @@ Required check failure exits non-zero. Missing provider keys are warnings.
 - `tau ext safe`: loads `tau-banner` + `purpose-gate` + `task-discipline` + `damage-control` + status/tool-counter footers.
 - `tau ext damage`: loads `tau-banner` + `damage-control` + status/tool-counter footers.
 - `tau ext damage-continue`: same as `damage`, with continue-safe prompt guidance.
-- `tau ext team`: loads `tau-banner` + `status-footer` + `tool-counter-footer`.
-- `tau ext chain`: loads `tau-banner` + `status-footer` + `tool-counter-footer`.
+- `tau ext team`: loads `tau-banner` + `persona-selector` + status/tool-counter footers.
+- `tau ext chain`: loads `tau-banner` + `persona-selector` + status/tool-counter footers.
 - `purpose-gate`: asks for a session purpose in UI, shows it in widget/status/footer, and appends it to the turn system prompt.
 - `task-discipline`: adds `/task add`, `/task start`, `/task done`, `/task set`, and `/task list`.
 - `damage-control`: blocks destructive shell commands and sensitive path reads from `.pi/damage-control-rules.yaml`.
+- `persona-selector`: adds `/system`, lists local personas, appends the selected persona to future system prompts, and shows it in status/footer.
 - `pure-focus`: hides header, footer, working row, and status labels.
 - `tau-banner`: replaces the default Pi header with a compact Tau banner.
 - `status-footer`: one-line model, context, and branch footer.
@@ -164,6 +165,8 @@ Commands:
 - `tau ext safe "ship with purpose and task tracking"`
 - `tau ext damage "inspect without destructive commands"`
 - `tau ext damage-continue "continue after a blocked command"`
+- `tau ext team "ship this with persona switching"`
+- `tau ext chain "run plan build review"`
 - `tau router -e extensions/pure-focus.ts "focus"`
 - `npm run ext:banner`
 - `npm run ext:minimal`
@@ -178,20 +181,54 @@ Layout:
 - `extensions/*.ts`: curated Tau extension entrypoints for explicit `tau ext` presets.
 - `.pi/extensions/`: project-local Pi auto-discovery and `/reload`.
 - `.pi/agents/`: local specialist agent prompts.
-- `.pi/teams/`: team workflow definitions.
-- `.pi/chains/`: sequential workflow definitions.
+- `.pi/agents/teams.yaml`: team workflow definitions.
+- `.pi/agents/agent-chain.yaml`: sequential workflow definitions.
+- `.pi/teams/`: team docs and pointers.
+- `.pi/chains/`: chain docs and pointers.
 - `.pi/themes/`: local TUI themes.
 - `.pi/rules/`: local policy and safety notes.
 - `.pi/damage-control-rules.yaml`: blocked command and sensitive path regexes.
 
 Task commands:
 
+- `/system list`
+- `/system builder`
+- `/system scout`
 - `/purpose finish M8`
 - `/task add implement purpose gate`
 - `/task start 1`
 - `/task done 1`
 - `/task set 1 pending`
 - `/task list`
+
+Agent files:
+
+- `scout`: repo exploration, no-edit.
+- `planner`: plan only, no-edit.
+- `plan-reviewer`: challenges plans.
+- `builder`: implementation.
+- `reviewer`: code review.
+- `documenter`: docs.
+- `red-team`: security and failure modes.
+
+Teams:
+
+- `full`
+- `plan-build`
+- `info`
+- `frontend`
+- `security`
+
+Chains:
+
+- `plan-build-review`
+- `scout-plan-build-review`
+- `plan-review-plan`
+
+Chain template conventions:
+
+- `$INPUT`: current chain input or previous step result.
+- `$ORIGINAL`: original user request that started the chain.
 
 Damage-control feedback:
 
