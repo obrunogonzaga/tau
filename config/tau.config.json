@@ -2,7 +2,7 @@
   "defaultProfile": "fast",
   "providerKeys": {
     "github-copilot": ["GITHUB_TOKEN", "GH_TOKEN"],
-    "openai-codex": ["OPENAI_API_KEY"]
+    "openai-codex": []
   },
   "profiles": {
     "deep": {

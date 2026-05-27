@@ -46,6 +46,8 @@ fs.writeFileSync(process.env.TAU_TEST_RECORD, JSON.stringify({
   const result = spawnSync(process.execPath, [wrapperPath, ...args], {
     env: {
       ...process.env,
+      OPENAI_API_KEY: process.env.OPENAI_API_KEY ?? 'openai-test-key',
+      GITHUB_TOKEN: process.env.GITHUB_TOKEN ?? 'gh-test-token',
       TAU_BANNER: '0',
       TAU_TEST_RECORD: recordPath,
       PATH: `${binDir}:${process.env.PATH}`,
@@ -1063,6 +1065,107 @@ test('tau_missingProfileValue_failsFast', () => {
   assert.match(result.stderr, /Missing value for --profile/)
 })
 
+test('tau_auth_missingForProvider_failsBeforeSpawn', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-config-auth-fail-'))
+  const customConfigPath = path.join(tempDir, 'config.json')
+
+  const customConfig = {
+    defaultProfile: 'fast',
+    providerKeys: {
+      'openai-codex': ['OPENAI_API_KEY'],
+    },
+    profiles: {
+      fast: {
+        id: 'openai-codex/gpt-5.3-codex-spark',
+        thinking: 'low',
+      },
+    },
+    aliases: {},
+    extensionPresets: {},
+  }
+
+  fs.writeFileSync(customConfigPath, JSON.stringify(customConfig))
+
+  const { result } = runWrapperResult(['hello'], {
+    TAU_CONFIG_PATH: customConfigPath,
+    OPENAI_API_KEY: '',
+    GITHUB_TOKEN: '',
+  })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /missing authentication for provider openai-codex/)
+})
+
+test('tau_missingProviderKeyMapping_failsFast', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-config-mapping-'))
+  const customConfigPath = path.join(tempDir, 'config.json')
+
+  const configPathContent = JSON.stringify({
+    defaultProfile: 'fast',
+    providerKeys: {
+      openai: ['OPENAI_API_KEY'],
+    },
+    profiles: {
+      fast: {
+        id: 'ghost/gpt-5',
+        thinking: 'low',
+      },
+    },
+    aliases: {},
+    extensionPresets: {},
+  })
+
+  fs.writeFileSync(customConfigPath, configPathContent)
+
+  const { result } = runWrapperResult(['hello'], {
+    TAU_CONFIG_PATH: customConfigPath,
+    OPENAI_API_KEY: 'openai-test-key',
+  })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /Missing auth mapping: no provider key names configured for ghost/)
+})
+
+test('tau_tokenlessProviderCanSkipKeyRequirement', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-config-tokenless-'))
+  const customConfigPath = path.join(tempDir, 'config.json')
+
+  const configPathContent = JSON.stringify({
+    defaultProfile: 'fast',
+    providerKeys: {
+      'openai-codex': [],
+    },
+    profiles: {
+      fast: {
+        id: 'openai-codex/gpt-5.3-codex-spark',
+        thinking: 'low',
+      },
+    },
+    aliases: {},
+    extensionPresets: {},
+  })
+
+  fs.writeFileSync(customConfigPath, configPathContent)
+
+  const { record, result } = runWrapperResult(['hello'], {
+    TAU_CONFIG_PATH: customConfigPath,
+    OPENAI_API_KEY: '',
+  })
+
+  assert.equal(result.status, 0)
+  assert.equal(record.args.includes('--append-system-prompt'), true)
+})
+
+test('tau_auth_check_canBeSkippedWithEnvFlag', () => {
+  const { record, result } = runWrapperResult(['hello'], {
+    OPENAI_API_KEY: '',
+    TAU_SKIP_AUTH_CHECK: '1',
+  })
+
+  assert.equal(result.status, 0)
+  assert.equal(record.args.includes('--append-system-prompt'), true)
+})
+
 test('tau_invalidConfig_failsFastWithClearError', () => {
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-config-'))
   const brokenConfigPath = path.join(tempDir, 'config.json')
@@ -1072,6 +1175,40 @@ test('tau_invalidConfig_failsFastWithClearError', () => {
 
   assert.equal(result.status, 1)
   assert.match(result.stderr, /Invalid config/)
+})
+
+test('tau_invalidProfileModelFormat_isRejected', () => {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-model-'))
+  const brokenConfigPath = path.join(tempDir, 'config.json')
+
+  const brokenConfig = {
+    defaultProfile: 'fast',
+    providerKeys: {
+      openai: ['OPENAI_API_KEY'],
+    },
+    profiles: {
+      fast: {
+        id: 'gpt-only',
+        thinking: 'low',
+      },
+      openai: {
+        id: 'openai-codex/gpt-5.3-codex-spark',
+        thinking: 'low',
+      },
+    },
+    aliases: {},
+    extensionPresets: {},
+  }
+
+  fs.writeFileSync(brokenConfigPath, JSON.stringify(brokenConfig))
+
+  const { result } = runWrapperResult(['hello'], {
+    TAU_CONFIG_PATH: brokenConfigPath,
+    OPENAI_API_KEY: 'openai-test-key',
+  })
+
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /id must be <provider>\/<model>/)
 })
 
 test('tau_doctor_reportsConcisePassingChecks', () => {
@@ -1087,8 +1224,8 @@ test('tau_doctor_reportsConcisePassingChecks', () => {
   assert.match(result.stdout, /\[ok\] pi/)
   assert.match(result.stdout, /\[ok\] settings/)
   assert.match(result.stdout, /\[ok\] sessions/)
-  assert.match(result.stdout, /\[ok\] key openai-codex: present/)
   assert.match(result.stdout, /\[ok\] key github-copilot: present/)
+  assert.match(result.stdout, /\[ok\] key openai-codex: (present|tokenless\/login mode)/)
   assert.doesNotMatch(result.stdout, /secret-openai|secret-github/)
 })
 
