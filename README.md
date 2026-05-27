@@ -35,6 +35,9 @@ This repo stores my customized `pi` CLI layer: router, prompts, configs, extensi
    - `tau ext minimal "focus"`
 10. Start orchestration mode:
    - `tau ext orchestrate "coordinate this"`
+11. Prefer shorthand command:
+   - `alias tauo='tau ext orchestrate'`
+   - Use: `tauo "coordinate this"`
 
 ## Profiles
 
@@ -174,6 +177,7 @@ Commands:
 - `tau ext team "ship this with persona switching"`
 - `tau ext chain "run plan build review"`
 - `tau ext orchestrate "scan docs in a subagent"`
+- `tauo "scan docs in a subagent"`
 - `tau router -e extensions/pure-focus.ts "focus"`
 - `npm run ext:banner`
 - `npm run ext:minimal`
