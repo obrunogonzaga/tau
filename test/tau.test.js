@@ -542,6 +542,49 @@ test('tau_replay_filtersThinkingBlocks', () => {
   assert.match(replay, /filter\(Boolean\)/)
 })
 
+test('tau_orchestrateM11_formatsSubagentStatusCards', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+
+  assert.match(subagent, /type SubagentStatus = 'running' \| 'done' \| 'error' \| 'cancelled'/)
+  assert.match(subagent, /renderStatusCard/)
+  assert.match(subagent, /promptPreview/)
+  assert.match(subagent, /lastActivity/)
+  assert.match(subagent, /formatElapsed/)
+})
+
+test('tau_orchestrateM11_showsPromptElapsedAndSummary', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+
+  assert.match(subagent, /originalPrompt/)
+  assert.match(subagent, /startedAt/)
+  assert.match(subagent, /finishedAt/)
+  assert.match(subagent, /summary/)
+  assert.match(subagent, /currentSummary/)
+})
+
+test('tau_orchestrateM11_registersSubagentNavigationCommands', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+
+  assert.match(subagent, /registerCommand\('sub list'/)
+  assert.match(subagent, /registerCommand\('sub show'/)
+  assert.match(subagent, /registerCommand\('sub open'/)
+  assert.match(subagent, /renderOpenFallback/)
+})
+
+test('tau_orchestrateM11_recordsBoundedTimelineWithoutThinking', () => {
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+
+  assert.match(subagent, /type SubagentEvent/)
+  assert.match(subagent, /recordEvent/)
+  assert.match(subagent, /assistant/)
+  assert.match(subagent, /tool/)
+  assert.match(subagent, /completion/)
+  assert.match(subagent, /error/)
+  assert.match(subagent, /thinking/)
+  assert.match(subagent, /truncateText/)
+  assert.match(subagent, /MAX_EVENT_TEXT/)
+})
+
 test('tau_personaSelector_registersSystemCommandAndStatus', () => {
   const content = fs.readFileSync(path.join(repoDir, 'extensions', 'persona-selector.ts'), 'utf8')
 

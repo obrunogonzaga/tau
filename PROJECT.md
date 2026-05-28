@@ -90,6 +90,14 @@ Goal:
 - [x] MYPI-39 Research Pi-to-Pi communication
 - [x] MYPI-40 Research meta-agent builder
 
+## Milestone 11: Subagent observability and navigation
+
+- [x] MYPI-41 Improve subagent status cards
+- [x] MYPI-42 Show prompt, runtime, and current summary
+- [x] MYPI-43 Add subagent list, show, and open commands
+- [x] MYPI-44 Add subagent event timeline
+- [x] MYPI-45 Add orchestrate smoke checks
+
 ## Issues
 
 ### MYPI-1: Add task aliases
@@ -773,3 +781,76 @@ Expected outcome:
 - require docs lookup before generation
 - require tests or smoke checks for generated assets
 - keep generated tools reviewable before activation
+
+### MYPI-41: Improve subagent status cards
+
+Make `/sub <task>` show compact status cards instead of noisy background output.
+
+Why:
+
+Subagents should be visible enough to trust without dumping long output under the input area.
+
+Expected outcome:
+
+- card includes id, status, short label, and prompt preview
+- status supports running, done, error, and cancelled when available
+- output stays compact by default
+- details remain auditable through commands
+
+### MYPI-42: Show prompt, runtime, and current summary
+
+Store and display the original prompt, start time, end time, elapsed time, summary, and current activity.
+
+Why:
+
+Bruno needs to know what each subagent is doing and how long it has been running without reopening raw session output.
+
+Expected outcome:
+
+- subagent stores original prompt
+- subagent stores start and end timestamps
+- elapsed time appears in cards and details
+- current summary and last activity update from events when available
+
+### MYPI-43: Add subagent list, show, and open commands
+
+Add detail navigation for background subagents.
+
+Why:
+
+Multiple background agents need a small command surface for scan, detail, and audit fallback.
+
+Expected outcome:
+
+- `/sub list` lists all subagents with status, elapsed time, and prompt preview
+- `/sub show <id>` shows prompt, status, elapsed time, summary, and recent events
+- `/sub open <id>` opens details if supported or shows an explicit fallback
+
+### MYPI-44: Add subagent event timeline
+
+Capture bounded lifecycle events for each subagent.
+
+Why:
+
+Timeline makes background work inspectable without replaying the whole session.
+
+Expected outcome:
+
+- timeline includes start, prompt, assistant messages, tool calls, completion, and errors
+- thinking blobs are filtered
+- long entries are truncated with a clear marker
+
+### MYPI-45: Add orchestrate smoke checks
+
+Add smoke checks for the orchestration UX contract.
+
+Why:
+
+The extension APIs are runtime-heavy. Static smoke checks protect the command surface and formatting contract.
+
+Expected outcome:
+
+- smoke checks cover status formatting
+- smoke checks cover prompt visibility and elapsed formatting
+- smoke checks cover thinking filtering
+- smoke checks cover navigation fallback

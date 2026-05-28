@@ -43,6 +43,7 @@
 - Add persona selector extension with `/system` and status/footer visibility.
 - Add orchestration preset with `/sub`, `/replay`, and `/xload`.
 - Add documented research decisions for Pi-to-Pi communication and meta-agent builder.
+- Add subagent status cards, detail commands, and bounded event timelines.
 
 ### Changed
 
@@ -61,3 +62,4 @@
 - Show extension status values in Tau custom footers.
 - Expand `team` and `chain` extension presets with persona switching.
 - Limit subagent default tools to `read,grep,find,ls`.
+- Keep subagent output compact and move full details behind `/sub show`.

@@ -157,7 +157,7 @@ Required check failure exits non-zero. Missing provider keys are warnings.
 - `task-discipline`: adds `/task add`, `/task start`, `/task done`, `/task set`, and `/task list`.
 - `damage-control`: blocks destructive shell commands and sensitive path reads from `.pi/damage-control-rules.yaml`.
 - `persona-selector`: adds `/system`, lists local personas, appends the selected persona to future system prompts, and shows it in status/footer.
-- `subagent-mode`: adds `/sub <task>` background runs with limited default tools: `read,grep,find,ls`.
+- `subagent-mode`: adds `/sub <task>`, `/sub list`, `/sub show <id>`, and `/sub open <id>` for limited-tools background agents.
 - `session-replay`: adds `/replay`, `/replay next`, `/replay prev`, and `/replay all` timeline output.
 - `cross-agent-loader`: adds `/xload` to list safe `.claude`, `.gemini`, `.codex`, and `.pi` commands, agents, skills, and assets.
 - `pure-focus`: hides header, footer, working row, and status labels.
@@ -214,6 +214,9 @@ Task commands:
 - `/task set 1 pending`
 - `/task list`
 - `/sub inspect docs for missing command examples`
+- `/sub list`
+- `/sub show 1`
+- `/sub open 1`
 - `/replay all`
 - `/replay next`
 - `/replay prev`
@@ -261,7 +264,6 @@ Damage-control feedback:
 - `TAU_BANNER`: custom banner text (set to `0` to disable).
 - `TAU_NO_PROMPT=1`: disable `prompts/system-prompt.md` and task prompt appends.
 - `TAU_SKIP_AUTH_CHECK=1`: skip wrapper-level provider auth preflight (useful when auth is session-based/OAuth).
-- `TAU_SUBAGENT_MAX_PREVIEW=<n>`: control preview truncation for `/sub` results (default: 1200 chars).
 - Logs: minimal startup logs are written to `<config-dir>/tau/logs/pi-YYYY-MM-DD.log`.
 - Sessions: `tau` stores sessions in `~/.pi/tau/sessions`.
 
@@ -271,7 +273,7 @@ Examples:
 - `TAU_BANNER=my-ops-pi npm run tau`
 - `TAU_NO_PROMPT=1 tau ask "raw upstream behavior"`
 - `TAU_SKIP_AUTH_CHECK=1 tau`
-- `TAU_SUBAGENT_MAX_PREVIEW=4000 tau ext orchestrate "coordenar revisao de arquitetura"`
+- `tau ext orchestrate "coordenar revisao de arquitetura"`
 
 ## Versioning
 
