@@ -167,9 +167,36 @@ Config lives in `config/tau.config.json`.
 - `extensionPresets`: named `tau ext` stacks.
 - `providerKeys`: env var names checked by `tau doctor`; values are never printed.
 
-Override config:
+### First run on a new machine
+
+The committed `defaultProfile` is `fast` (`openai-codex/gpt-5.3-codex-spark`), which needs a Codex subscription. On a machine without it:
+
+1. Run `tau doctor` — it prints the active default profile and which provider keys are present.
+2. Create a per-machine overlay (gitignored) so you don't edit the shared config:
 
 ```bash
+cp config/tau.config.local.example.json config/tau.config.local.json
+```
+
+`config/tau.config.local.json` is **deep-merged** over `config/tau.config.json`; set only what differs. The portable default needs no API key — it defers to whatever `pi` is logged into:
+
+```json
+{ "defaultProfile": "local" }
+```
+
+The `local` profile is a passthrough: tau forwards no `--provider/--model`, so `pi` uses its own configured model/login. Or point a profile at a provider you have:
+
+```json
+{
+  "profiles": { "fast": { "id": "openrouter/anthropic/claude-sonnet-4", "thinking": "medium" } },
+  "providerKeys": { "openrouter": ["OPENROUTER_API_KEY"] }
+}
+```
+
+Override the overlay location with `TAU_LOCAL_CONFIG`, or replace the whole config with `TAU_CONFIG_PATH`:
+
+```bash
+TAU_LOCAL_CONFIG=~/my-tau.local.json tau doctor
 TAU_CONFIG_PATH=./other-config.json tau doctor
 ```
 
