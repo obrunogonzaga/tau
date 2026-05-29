@@ -4,6 +4,7 @@ import type {
   EditToolDetails,
   ExtensionAPI,
   Theme,
+  ToolRenderContext,
   ToolRenderResultOptions,
 } from '@earendil-works/pi-coding-agent'
 import {
@@ -50,17 +51,19 @@ const bodyLines = (text: string, expanded: boolean) => {
   return [...lines.slice(0, MAX_LINES), `… +${lines.length - MAX_LINES} more lines`]
 }
 
+const errorLine = (result: AgentToolResult<unknown>, theme: Theme) =>
+  resultLine(theme, theme.fg('error', firstLine(textContent(result)) || 'failed'), [])
+
 const countSummary = (noun: string) => (
   result: AgentToolResult<unknown>,
   options: ToolRenderResultOptions,
   theme: Theme,
+  context: ToolRenderContext,
 ) => {
   if (options.isPartial) return resultLine(theme, theme.fg('warning', 'working…'), [])
+  if (context.isError) return errorLine(result, theme)
 
-  const text = textContent(result)
-  if (text.startsWith('Error')) return resultLine(theme, theme.fg('error', firstLine(text)), [])
-
-  const lines = text.split('\n').filter((line) => line.trim())
+  const lines = textContent(result).split('\n').filter((line) => line.trim())
   const summary = theme.fg('success', `${lines.length} ${noun}`)
   return resultLine(theme, summary, bodyLines(lines.join('\n'), options.expanded))
 }
@@ -69,26 +72,24 @@ const bashSummary = (
   result: AgentToolResult<BashToolDetails | undefined>,
   options: ToolRenderResultOptions,
   theme: Theme,
+  context: ToolRenderContext,
 ) => {
   if (options.isPartial) return resultLine(theme, theme.fg('warning', 'running…'), [])
+  if (context.isError) return errorLine(result, theme)
 
   const output = textContent(result)
-  const exit = output.match(/exit code: (\d+)/)
-  const code = exit ? Number(exit[1]) : 0
   const lines = output.split('\n').filter((line) => line.trim())
-  const summary = code === 0 ? theme.fg('success', `${lines.length} lines`) : theme.fg('error', `exit ${code}`)
-  return resultLine(theme, summary, bodyLines(output, options.expanded))
+  return resultLine(theme, theme.fg('success', `${lines.length} lines`), bodyLines(output, options.expanded))
 }
 
 const editSummary = (
   result: AgentToolResult<EditToolDetails | undefined>,
   options: ToolRenderResultOptions,
   theme: Theme,
+  context: ToolRenderContext,
 ) => {
   if (options.isPartial) return resultLine(theme, theme.fg('warning', 'editing…'), [])
-
-  const text = textContent(result)
-  if (text.startsWith('Error')) return resultLine(theme, theme.fg('error', firstLine(text)), [])
+  if (context.isError) return errorLine(result, theme)
 
   const diff = result.details?.diff
   if (!diff) return resultLine(theme, theme.fg('success', 'updated'), [])
@@ -106,7 +107,12 @@ const registerTools = (pi: ExtensionAPI, cwd: string) => {
     label: string,
     original: ReturnType<typeof createReadTool>,
     getArg: (args: Args) => string | undefined,
-    summarize: (result: AgentToolResult<any>, options: ToolRenderResultOptions, theme: Theme) => Text,
+    summarize: (
+      result: AgentToolResult<any>,
+      options: ToolRenderResultOptions,
+      theme: Theme,
+      context: ToolRenderContext,
+    ) => Text,
   ) => {
     pi.registerTool({
       name,
@@ -118,7 +124,7 @@ const registerTools = (pi: ExtensionAPI, cwd: string) => {
         return original.execute(toolCallId, params, signal, onUpdate)
       },
       renderCall: (args: Args, theme: Theme) => callLine(theme, label, getArg(args)),
-      renderResult: (result, options, theme) => summarize(result, options, theme),
+      renderResult: (result, options, theme, context) => summarize(result, options, theme, context),
     })
   }
 

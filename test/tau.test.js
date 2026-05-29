@@ -562,6 +562,9 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(tools, /registerTool\(/)
   assert.match(tools, /registerTools\(pi, ctx\.cwd\)/)
   assert.match(tools, /more lines/)
+  assert.match(tools, /context\.isError/)
+  assert.doesNotMatch(tools, /startsWith\('Error'\)/)
+  assert.doesNotMatch(tools, /exit code:/)
 })
 
 test('tau_ccTheme_isDarkReadableWithTealAccent', () => {
