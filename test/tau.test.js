@@ -538,7 +538,9 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   const tools = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-tools.ts'), 'utf8')
 
   assert.match(header, /setHeader\(/)
-  assert.match(header, /Welcome to Tau/)
+  assert.match(header, /Welcome back/)
+  assert.match(header, /Tips for getting started/)
+  assert.match(header, /What's new/)
   assert.match(header, /CC_THEME = 'tau-cc'/)
   assert.match(header, /setTheme\(CC_THEME\)/)
   assert.match(editor, /setEditorComponent\(/)
