@@ -83,14 +83,18 @@ const runDoctorResult = ({ env = {}, settings = true, pi = true, tmux = null } =
     writeExecutable(path.join(binDir, 'tmux'), `#!/bin/sh\necho ${JSON.stringify(tmux)}\n`)
   }
 
+  const mergedEnv = {
+    ...process.env,
+    HOME: homeDir,
+    TAU_BANNER: '0',
+    PATH: binDir,
+    ...env,
+  }
+  // The test controls tmux state via the `tmux` param; never inherit an ambient TMUX.
+  if (!('TMUX' in env)) delete mergedEnv.TMUX
+
   return spawnSync(process.execPath, [wrapperPath, 'doctor'], {
-    env: {
-      ...process.env,
-      HOME: homeDir,
-      TAU_BANNER: '0',
-      PATH: binDir,
-      ...env,
-    },
+    env: mergedEnv,
     encoding: 'utf8',
   })
 }

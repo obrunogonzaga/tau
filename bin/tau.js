@@ -244,7 +244,8 @@ const checkSessions = () => {
 const checkTmux = () => {
   if (!process.env.TMUX) return { ok: true, status: 'skip', detail: 'not inside tmux' }
   const result = spawnSync('tmux', ['show-options', '-gqv', 'extended-keys'], { encoding: 'utf8' })
-  const value = result.stdout.trim() || result.stderr.trim() || 'missing'
+  if (result.error) return { ok: false, detail: result.error.message }
+  const value = result.stdout?.trim() || result.stderr?.trim() || 'missing'
   return { ok: result.status === 0 && value === 'on', detail: value }
 }
 
