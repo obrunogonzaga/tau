@@ -3,9 +3,9 @@
   "name": "picpay",
   "colors": {
     "accent": "#21c25e",
-    "border": "#3f3f46",
-    "borderAccent": "#1aa34a",
-    "borderMuted": "#27272a",
+    "border": "#21c25e",
+    "borderAccent": "#21c25e",
+    "borderMuted": "#1aa34a",
     "success": "#4ade80",
     "error": "#f87171",
     "warning": "#fbbf24",
