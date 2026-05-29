@@ -114,7 +114,9 @@ Theme shortcuts:
 - Rounded input border with model and context labels.
 - `✻ Cogitating…` star spinner with rotating status verbs.
 - `●` tool-call bullets with `⎿` indented output.
-- `? for shortcuts` hint line.
+- `? for shortcuts` hint line. On an empty prompt, `?` opens the shortcuts
+  overlay as a peek: any key closes it and is forwarded to the input, and
+  pressing `?` again types a literal `?`.
 
 | Command | Description |
 | --- | --- |

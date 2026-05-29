@@ -77,11 +77,11 @@ class ShortcutsOverlay implements Component, Focusable {
 
   constructor(
     private readonly theme: Theme,
-    private readonly done: (result: undefined) => void,
+    private readonly done: (result: string) => void,
   ) {}
 
-  handleInput(): void {
-    this.done(undefined)
+  handleInput(data: string): void {
+    this.done(data)
   }
 
   render(): string[] {
@@ -95,16 +95,23 @@ class ShortcutsOverlay implements Component, Focusable {
     for (const [key, desc] of SHORTCUTS) {
       lines.push(row(`  ${this.theme.fg('accent', key.padEnd(keyWidth))}  ${this.theme.fg('text', desc)}`))
     }
-    lines.push(row(''), row(` ${this.theme.fg('dim', 'press any key to close')}`), border(`╰${'─'.repeat(inner)}╯`))
+    lines.push(
+      row(''),
+      row(` ${this.theme.fg('dim', 'any key closes · ? to type a literal ?')}`),
+      border(`╰${'─'.repeat(inner)}╯`),
+    )
     return lines
   }
 
   invalidate(): void {}
 }
 
+const isPrintableKey = (data: string) =>
+  data.length >= 1 && data.charCodeAt(0) >= 32 && data.charCodeAt(0) !== 127 && !data.startsWith('\x1b')
+
 export default function ccEditor(pi: ExtensionAPI) {
   const showShortcuts = (ctx: ExtensionContext) =>
-    ctx.ui.custom<undefined>((_tui, theme, _kb, done) => new ShortcutsOverlay(theme, done), { overlay: true })
+    ctx.ui.custom<string>((_tui, theme, _kb, done) => new ShortcutsOverlay(theme, done), { overlay: true })
 
   pi.registerCommand('shortcuts', {
     description: 'Show Tau key shortcuts',
@@ -125,7 +132,12 @@ export default function ccEditor(pi: ExtensionAPI) {
 
       handleInput(data: string): void {
         if (data === '?' && this.getText().length === 0) {
-          void showShortcuts(ctx)
+          void showShortcuts(ctx).then((dismissKey) => {
+            // '?' inserts a literal '?'; any other printable key the user typed
+            // to dismiss is forwarded, so the overlay is a peek that never eats input.
+            if (dismissKey === '?') super.handleInput('?')
+            else if (isPrintableKey(dismissKey)) super.handleInput(dismissKey)
+          })
           return
         }
 

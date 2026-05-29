@@ -553,6 +553,8 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(editor, /registerCommand\('shortcuts'/)
   assert.match(editor, /this\.getText\(\)\.length === 0/)
   assert.match(editor, /ctx\.ui\.custom/)
+  assert.match(editor, /dismissKey === '\?'/)
+  assert.match(editor, /isPrintableKey\(dismissKey\)/)
   assert.match(spinner, /setWorkingIndicator\(/)
   assert.match(spinner, /registerCommand\('spinner'/)
   assert.match(spinner, /✻/)
