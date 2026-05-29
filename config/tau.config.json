@@ -95,6 +95,7 @@
     },
     "cc": {
       "extensions": ["theme-cycler.ts", "cc-header.ts", "cc-editor.ts", "cc-spinner.ts", "cc-tools.ts"],
+      "themes": ["tau-cc"],
       "profile": "fast"
     },
     "chain": {

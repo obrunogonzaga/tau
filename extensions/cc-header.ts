@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -23,15 +22,7 @@ const readVersion = () => {
   }
 }
 
-const detectName = () => {
-  try {
-    const name = execFileSync('git', ['config', 'user.name'], { encoding: 'utf8' }).trim()
-    if (name) return name.split(' ').slice(0, 2).join(' ')
-  } catch {
-    // ignore
-  }
-  return process.env.USER ?? 'there'
-}
+const shortenName = (name: string) => name.split(' ').slice(0, 2).join(' ')
 
 const formatCwd = (cwd: string) => {
   const home = process.env.HOME
@@ -162,14 +153,26 @@ class CcHeader implements Component {
 }
 
 export default function ccHeader(pi: ExtensionAPI) {
-  const name = detectName()
   const version = readVersion()
 
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return
 
+    let name = process.env.USER ?? 'there'
+    const applyHeader = () => ctx.ui.setHeader((_tui: TUI, theme: Theme) => new CcHeader(ctx, theme, name, version))
+
     if (ctx.ui.theme.name !== CC_THEME) ctx.ui.setTheme(CC_THEME)
-    ctx.ui.setHeader((_tui: TUI, theme: Theme) => new CcHeader(ctx, theme, name, version))
+    applyHeader()
     ctx.ui.setTitle('tau')
+
+    pi.exec('git', ['config', 'user.name'], { cwd: ctx.cwd, timeout: 2000 })
+      .then((result) => {
+        const gitName = result.stdout.trim()
+        if (gitName) {
+          name = shortenName(gitName)
+          applyHeader()
+        }
+      })
+      .catch(() => {})
   })
 }

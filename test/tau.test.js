@@ -517,6 +517,8 @@ test('tau_extCc_expandsClaudeStylePreset', () => {
     'gpt-5.3-codex-spark',
     '--thinking',
     'low',
+    '--theme',
+    path.join(repoDir, '.pi', 'themes', 'tau-cc.json'),
     '-e',
     extensionPath('theme-cycler.ts'),
     '-e',
@@ -543,6 +545,7 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(header, /What's new/)
   assert.match(header, /CC_THEME = 'tau-cc'/)
   assert.match(header, /setTheme\(CC_THEME\)/)
+  assert.match(header, /pi\.exec\('git'/)
   assert.match(editor, /setEditorComponent\(/)
   assert.match(editor, /╭/)
   assert.match(editor, /╰/)
@@ -557,6 +560,8 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(tools, /'●'/)
   assert.match(tools, /'⎿'/)
   assert.match(tools, /registerTool\(/)
+  assert.match(tools, /registerTools\(pi, ctx\.cwd\)/)
+  assert.match(tools, /more lines/)
 })
 
 test('tau_ccTheme_isDarkReadableWithTealAccent', () => {

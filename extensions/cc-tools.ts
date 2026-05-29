@@ -42,8 +42,13 @@ const resultLine = (theme: Theme, summary: string, body: string[]) => {
   return new Text(text, 0, 0)
 }
 
-const bodyLines = (text: string, expanded: boolean) =>
-  expanded ? text.split('\n').slice(0, MAX_LINES) : []
+const bodyLines = (text: string, expanded: boolean) => {
+  if (!expanded) return []
+
+  const lines = text.split('\n')
+  if (lines.length <= MAX_LINES) return lines
+  return [...lines.slice(0, MAX_LINES), `… +${lines.length - MAX_LINES} more lines`]
+}
 
 const countSummary = (noun: string) => (
   result: AgentToolResult<unknown>,
@@ -95,9 +100,7 @@ const editSummary = (
   return resultLine(theme, summary, bodyLines(diff, options.expanded))
 }
 
-export default function ccTools(pi: ExtensionAPI) {
-  const cwd = process.cwd()
-
+const registerTools = (pi: ExtensionAPI, cwd: string) => {
   const register = <Args extends Record<string, unknown>>(
     name: string,
     label: string,
@@ -126,4 +129,8 @@ export default function ccTools(pi: ExtensionAPI) {
   register('ls', 'List', createLsTool(cwd), (a) => (a.path as string) ?? '.', countSummary('entries'))
   register('grep', 'Search', createGrepTool(cwd), (a) => a.pattern as string, countSummary('matches'))
   register('find', 'Find', createFindTool(cwd), (a) => a.pattern as string, countSummary('matches'))
+}
+
+export default function ccTools(pi: ExtensionAPI) {
+  pi.on('session_start', (_event, ctx) => registerTools(pi, ctx.cwd))
 }
