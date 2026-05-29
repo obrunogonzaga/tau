@@ -13,6 +13,12 @@ export interface Brand {
 
 const MASCOT = [' ▄███▄ ', '█ ▘ ▘ █', ' █████ ', ' ▀   ▀ ']
 
+const PICPAY_WORDMARK = [
+  '┌─┐ ┬ ┌─┐ ┌─┐ ┌─┐ ┬ ┬',
+  '├─┘ │ │   ├─┘ ├─┤ └┬┘',
+  '┴   ┴ └─┘ ┴   ┴ ┴  ┴ ',
+]
+
 const TAU: Brand = {
   id: 'tau',
   title: 'tau',
@@ -33,7 +39,7 @@ const PICPAY: Brand = {
   greeting: 'Welcome back',
   themeName: 'picpay',
   bannerLabel: 'picpay',
-  mascot: MASCOT,
+  mascot: PICPAY_WORDMARK,
   tagline: 'picpay · inspect first · edit narrow · test · ship',
   tips: ['Run tau doctor to check your setup', 'Press ? for shortcuts · / for commands'],
   whatsNew: ['Work mode · PicPay Code', 'Switch themes with /theme picpay', '/help for more'],
