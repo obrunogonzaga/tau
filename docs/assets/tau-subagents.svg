@@ -1,0 +1,19 @@
+<svg width="900" height="390" viewBox="0 0 900 390" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Tau subagent commands</title>
+  <desc id="desc">Terminal screenshot showing Tau subagent list, show, and open commands.</desc>
+  <rect width="900" height="390" rx="10" fill="#101418"/>
+  <rect x="0" y="0" width="900" height="42" rx="10" fill="#1c232b"/>
+  <circle cx="24" cy="21" r="6" fill="#ff5f57"/>
+  <circle cx="44" cy="21" r="6" fill="#febc2e"/>
+  <circle cx="64" cy="21" r="6" fill="#28c840"/>
+  <text x="92" y="27" font-family="Menlo, Consolas, monospace" font-size="14" fill="#c9d1d9">tau ext orchestrate</text>
+  <text x="30" y="78" font-family="Menlo, Consolas, monospace" font-size="16" fill="#8b949e">/sub inspect README commands and summarize gaps</text>
+  <text x="30" y="112" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">#1 running inspect README commands and ...</text>
+  <text x="30" y="140" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">elapsed 0.0s | last start</text>
+  <text x="30" y="168" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">prompt inspect README commands and summarize gaps</text>
+  <text x="30" y="214" font-family="Menlo, Consolas, monospace" font-size="16" fill="#8b949e">/sub list</text>
+  <text x="30" y="248" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">#1 done 8.4s | inspect README commands and summarize gaps</text>
+  <text x="30" y="294" font-family="Menlo, Consolas, monospace" font-size="16" fill="#8b949e">/sub show 1</text>
+  <text x="30" y="328" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">summary README has command coverage; docs need clearer quick start.</text>
+  <text x="30" y="356" font-family="Menlo, Consolas, monospace" font-size="16" fill="#e6edf3">events: start, prompt, assistant, tool, completion</text>
+</svg>

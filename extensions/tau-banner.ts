@@ -1,23 +1,23 @@
-import type { ExtensionAPI, Theme } from '@earendil-works/pi-coding-agent'
+import type { ExtensionAPI, ExtensionContext, Theme } from '@earendil-works/pi-coding-agent'
 import type { Component, TUI } from '@earendil-works/pi-tui'
 
-const BANNER = [
-  '████████╗ █████╗ ██╗   ██╗',
-  '╚══██╔══╝██╔══██╗██║   ██║',
-  '   ██║   ███████║██║   ██║',
-  '   ██║   ██╔══██║██║   ██║',
-  '   ██║   ██║  ██║╚██████╔╝',
-  '   ╚═╝   ╚═╝  ╚═╝ ╚═════╝ ',
-]
+const formatMode = (ctx: ExtensionContext) => {
+  if (!ctx.model) return 'tau :: model pending'
+
+  return `tau :: ${ctx.model.provider}/${ctx.model.id}`
+}
 
 class TauBanner implements Component {
-  constructor(private readonly theme: Theme) {}
+  constructor(
+    private readonly ctx: ExtensionContext,
+    private readonly theme: Theme,
+  ) {}
 
   render(): string[] {
     return [
-      ...BANNER.map((line) => this.theme.fg('accent', line)),
-      this.theme.fg('dim', 'escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more'),
-      this.theme.fg('dim', 'inspect real state · edit narrowly · test · report results'),
+      this.theme.fg('accent', formatMode(this.ctx)),
+      this.theme.fg('dim', 'inspect first | edit narrow | test | report'),
+      this.theme.fg('dim', '/ commands | ! bash | ctrl+o tools | ctrl+c stop'),
       '',
     ]
   }
@@ -29,7 +29,7 @@ export default function tauBanner(pi: ExtensionAPI) {
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return
 
-    ctx.ui.setHeader((_tui: TUI, theme: Theme) => new TauBanner(theme))
+    ctx.ui.setHeader((_tui: TUI, theme: Theme) => new TauBanner(ctx, theme))
     ctx.ui.setTitle('tau')
   })
 }

@@ -234,6 +234,7 @@ test('tau_configFile_containsProfilesAndAliases', () => {
     'orchestrate',
     'safe',
     'team',
+    'vibe',
   ])
 })
 
@@ -483,6 +484,28 @@ test('tau_extOrchestrate_loadsAdvancedOrchestrationExtensions', () => {
   ]))
 })
 
+test('tau_extVibe_loadsPersonalityStack', () => {
+  const record = runWrapper(['ext', 'vibe', 'make it visible'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('tau-banner.ts'),
+    '-e',
+    extensionPath('theme-cycler.ts'),
+    '-e',
+    extensionPath('status-footer.ts'),
+    '-e',
+    extensionPath('tool-counter-footer.ts'),
+    'make it visible',
+  ]))
+})
+
 test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
   const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
@@ -510,6 +533,54 @@ test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   assert.match(loader, /SECRET_FILE_PATTERN/)
   assert.match(loader, /BLOCKED_DIRS/)
   assert.match(loader, /toLowerCase\(\)\.includes\(filter\)/)
+})
+
+test('tau_themeCycler_registersCommandShortcutsAndStatus', () => {
+  const content = fs.readFileSync(path.join(repoDir, 'extensions', 'theme-cycler.ts'), 'utf8')
+
+  assert.match(content, /registerCommand\('theme'/)
+  assert.match(content, /\/theme <name>/)
+  assert.match(content, /registerShortcut\(Key\.ctrlShift\('t'\)/)
+  assert.match(content, /registerShortcut\(Key\.ctrlAlt\('t'\)/)
+  assert.match(content, /setStatus\(THEME_KEY/)
+  assert.match(content, /Theme not found/)
+  assert.match(content, /getAllThemes\(\)/)
+  assert.match(content, /setTheme\(themeName\)/)
+  assert.match(content, /resources_discover/)
+  assert.match(content, /shouldRegisterTauThemes\(event\.cwd\)/)
+})
+
+test('tau_themePack_containsDarkReadableThemes', () => {
+  const requiredThemes = ['tau-dark', 'tau-focus', 'tau-alert']
+
+  for (const themeName of requiredThemes) {
+    const themePath = path.join(repoDir, '.pi', 'themes', `${themeName}.json`)
+    const theme = JSON.parse(fs.readFileSync(themePath, 'utf8'))
+
+    assert.equal(theme.name, themeName)
+    assert.match(theme.colors.text, /^#/)
+    assert.match(theme.colors.accent, /^#/)
+    assert.match(theme.colors.userMessageText, /^#/)
+    assert.notEqual(theme.colors.text.toLowerCase(), '#000000')
+  }
+})
+
+test('tau_themeDocs_documentVibeThemeCommandAndShortcuts', () => {
+  const readme = fs.readFileSync(path.join(repoDir, 'README.md'), 'utf8')
+  const commands = fs.readFileSync(path.join(repoDir, 'docs', 'COMMANDS.md'), 'utf8')
+  const themeReadme = fs.readFileSync(path.join(repoDir, '.pi', 'themes', 'README.md'), 'utf8')
+  const packageJson = JSON.parse(fs.readFileSync(path.join(repoDir, 'package.json'), 'utf8'))
+
+  assert.match(readme, /tau ext vibe/)
+  assert.match(readme, /\/theme tau-dark/)
+  assert.match(commands, /tau ext vibe/)
+  assert.match(commands, /\/theme <name>/)
+  assert.match(commands, /Ctrl\+Shift\+T/)
+  assert.match(commands, /Ctrl\+Alt\+T/)
+  assert.match(themeReadme, /tau-dark/)
+  assert.match(themeReadme, /tau-focus/)
+  assert.match(themeReadme, /tau-alert/)
+  assert.equal(packageJson.scripts['ext:vibe'], 'tau ext vibe')
 })
 
 test('tau_orchestrationResearchDocuments_recordM10Decisions', () => {

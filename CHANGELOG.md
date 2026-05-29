@@ -44,9 +44,12 @@
 - Add orchestration preset with `/sub`, `/replay`, and `/xload`.
 - Add documented research decisions for Pi-to-Pi communication and meta-agent builder.
 - Add subagent status cards, detail commands, and bounded event timelines.
+- Add theme cycler extension with `/theme`, Tau themes, and `vibe` preset.
 
 ### Changed
 
+- Improve repository documentation with a command reference and terminal screenshots.
+- Make Tau banner compact and model-aware.
 - Rename wrapper, command, config, tests, sessions, and docs to `tau`.
 - Route wrapper sessions through `PI_CODING_AGENT_DIR` and `PI_CODING_AGENT_SESSION_DIR`.
 - Keep `tau` sessions separate from raw `pi` sessions.

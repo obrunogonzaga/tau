@@ -98,6 +98,14 @@ Goal:
 - [x] MYPI-44 Add subagent event timeline
 - [x] MYPI-45 Add orchestrate smoke checks
 
+## Milestone 12: Tau personality and theme system
+
+- [x] MYPI-46 Add theme cycler extension
+- [x] MYPI-47 Add Tau theme pack
+- [x] MYPI-48 Add vibe extension preset
+- [x] MYPI-49 Improve Tau banner personality
+- [x] MYPI-50 Add theme docs and smoke checks
+
 ## Issues
 
 ### MYPI-1: Add task aliases
@@ -854,3 +862,81 @@ Expected outcome:
 - smoke checks cover prompt visibility and elapsed formatting
 - smoke checks cover thinking filtering
 - smoke checks cover navigation fallback
+
+### MYPI-46: Add theme cycler extension
+
+Add `extensions/theme-cycler.ts` adapted for Tau.
+
+Why:
+
+Tau needs visible personality, not only routing and safety behavior. Theme switching should be fast enough to use during normal sessions.
+
+Expected outcome:
+
+- `/theme` lists available themes
+- `/theme <name>` switches directly
+- keyboard shortcuts cycle next and previous themes when safe
+- current theme appears in status
+- missing theme gives a clear error
+
+### MYPI-47: Add Tau theme pack
+
+Add local themes under `.pi/themes`.
+
+Why:
+
+Tau should have its own visual language instead of relying only on upstream defaults.
+
+Expected outcome:
+
+- `tau-dark` for daily work
+- `tau-focus` for low-distraction sessions
+- `tau-alert` for safety/debug sessions
+- theme files are versioned and documented
+- colors stay readable in dark terminals
+
+### MYPI-48: Add vibe extension preset
+
+Add a wrapper preset for personality mode.
+
+Why:
+
+Theme cycling should be easy to launch without manually stacking extensions.
+
+Expected outcome:
+
+- `tau ext vibe` loads banner, theme cycler, status footer, and tool counter footer
+- `npm run ext:vibe` exists
+- preset keeps the default Tau profile
+- README and command docs show real usage
+
+### MYPI-49: Improve Tau banner personality
+
+Make `tau-banner` more mode-aware and distinctive.
+
+Why:
+
+The first screen should tell Bruno what mode he is in and reinforce Tau's operating style.
+
+Expected outcome:
+
+- banner remains compact
+- banner can show mode hints for default, focus, safe, and orchestrate contexts when available
+- copy is concise and opinionated
+- no giant ASCII art or noisy decoration
+
+### MYPI-50: Add theme docs and smoke checks
+
+Lock the theme UX with docs and tests.
+
+Why:
+
+Theme work is easy to break because it depends on runtime UI APIs. Static checks should protect commands, shortcuts, presets, docs, and theme files.
+
+Expected outcome:
+
+- tests cover `/theme` registration
+- tests cover shortcut registration
+- tests cover `vibe` preset expansion
+- tests verify Tau theme files exist
+- docs include commands and screenshots if useful

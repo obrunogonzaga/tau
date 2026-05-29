@@ -142,6 +142,10 @@
     "team": {
       "extensions": ["tau-banner.ts", "persona-selector.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"
+    },
+    "vibe": {
+      "extensions": ["tau-banner.ts", "theme-cycler.ts", "status-footer.ts", "tool-counter-footer.ts"],
+      "profile": "fast"
     }
   }
 }
