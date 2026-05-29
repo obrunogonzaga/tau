@@ -6,6 +6,7 @@ import type {
   Theme,
 } from '@earendil-works/pi-coding-agent'
 import type { Component, TUI } from '@earendil-works/pi-tui'
+import { formatModel, formatStatuses } from './lib/cc-format.ts'
 
 const formatContext = (usage: ContextUsage | undefined) => {
   if (!usage) return 'ctx ?'
@@ -13,15 +14,6 @@ const formatContext = (usage: ContextUsage | undefined) => {
 
   return `ctx ${usage.percent.toFixed(0)}%`
 }
-
-const formatModel = (ctx: ExtensionContext) => {
-  if (!ctx.model) return 'model ?'
-
-  return `${ctx.model.provider}/${ctx.model.id}`
-}
-
-const formatStatuses = (footerData: ReadonlyFooterDataProvider) =>
-  [...footerData.getExtensionStatuses().values()].map((status) => status.replace(/\s+/g, ' ').trim())
 
 class StatusFooter implements Component {
   constructor(
@@ -32,7 +24,7 @@ class StatusFooter implements Component {
 
   render(): string[] {
     const branch = this.footerData.getGitBranch()
-    const parts = ['tau', formatModel(this.ctx), formatContext(this.ctx.getContextUsage()), ...formatStatuses(this.footerData)]
+    const parts = ['tau', formatModel(this.ctx, 'model ?'), formatContext(this.ctx.getContextUsage()), ...formatStatuses(this.footerData)]
     if (branch) parts.push(`git ${branch}`)
 
     return [this.theme.fg('dim', parts.join(' | '))]

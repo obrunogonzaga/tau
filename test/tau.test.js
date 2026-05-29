@@ -558,6 +558,11 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(spinner, /setWorkingIndicator\(/)
   assert.match(spinner, /registerCommand\('spinner'/)
   assert.match(spinner, /✻/)
+  assert.match(spinner, /setWorkingMessage\(/)
+  assert.match(spinner, /'agent_start'/)
+  assert.match(spinner, /esc to interrupt/)
+  assert.match(editor, /'tool_call'/)
+  assert.match(editor, /class CcFooter/)
   assert.match(tools, /renderShell: 'self'/)
   assert.match(tools, /'●'/)
   assert.match(tools, /'⎿'/)
@@ -567,6 +572,20 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   assert.match(tools, /context\.isError/)
   assert.doesNotMatch(tools, /startsWith\('Error'\)/)
   assert.doesNotMatch(tools, /exit code:/)
+})
+
+test('tau_ccFormatLib_isSharedAcrossExtensions', () => {
+  const lib = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'cc-format.ts'), 'utf8')
+
+  for (const helper of ['formatCwd', 'formatModel', 'formatContextPercent', 'formatCost', 'formatTools', 'fit', 'fitRounded']) {
+    assert.match(lib, new RegExp(`export const ${helper}`), helper)
+  }
+
+  const importers = ['cc-header.ts', 'cc-editor.ts', 'status-footer.ts', 'tool-counter-footer.ts']
+  for (const name of importers) {
+    const content = fs.readFileSync(path.join(repoDir, 'extensions', name), 'utf8')
+    assert.match(content, /from '\.\/lib\/cc-format\.ts'/, name)
+  }
 })
 
 test('tau_ccTheme_isDarkReadableWithTealAccent', () => {

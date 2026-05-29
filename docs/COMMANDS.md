@@ -110,10 +110,12 @@ Theme shortcuts:
 
 `tau ext cc` recreates Claude Code's layout with Tau's identity:
 
-- `✻ Welcome to Tau` welcome box with cwd and model.
+- `✻ Welcome back <name>` two-column welcome card with cwd, model, tips.
 - Rounded input border with model and context labels.
-- `✻ Cogitating…` star spinner with rotating status verbs.
+- `✻ Cogitating… (3s · esc to interrupt)` star spinner with rotating verbs
+  and live elapsed seconds while the agent works.
 - `●` tool-call bullets with `⎿` indented output.
+- Footer status line with git branch, tool-call counts, and cost.
 - `? for shortcuts` hint line. On an empty prompt, `?` opens the shortcuts
   overlay as a peek: any key closes it and is forwarded to the input, and
   pressing `?` again types a literal `?`.

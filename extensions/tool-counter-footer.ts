@@ -6,33 +6,13 @@ import type {
   Theme,
 } from '@earendil-works/pi-coding-agent'
 import type { Component, TUI } from '@earendil-works/pi-tui'
-
-const formatShortPath = (cwd: string) => cwd.replace(process.env.HOME ?? '', '~')
+import { formatCost, formatCwd, formatModel, formatStatuses, formatTools } from './lib/cc-format.ts'
 
 const formatContext = (usage: ContextUsage | undefined) => {
   if (!usage || usage.tokens === null) return 'ctx ?'
 
   return `ctx ${usage.tokens}/${usage.contextWindow}`
 }
-
-const formatCost = (ctx: ExtensionContext) => {
-  const stats = (ctx as unknown as { getSessionStats?: () => { cost?: number } }).getSessionStats?.()
-  if (typeof stats?.cost === 'number') return `$${stats.cost.toFixed(4)}`
-
-  return '$?'
-}
-
-const formatTools = (toolCounts: Map<string, number>) => {
-  if (toolCounts.size === 0) return 'tools 0'
-
-  return [...toolCounts.entries()]
-    .sort(([left], [right]) => left.localeCompare(right))
-    .map(([name, count]) => `${name}:${count}`)
-    .join(' ')
-}
-
-const formatStatuses = (footerData: ReadonlyFooterDataProvider) =>
-  [...footerData.getExtensionStatuses().values()].map((status) => status.replace(/\s+/g, ' ').trim())
 
 class ToolCounterFooter implements Component {
   constructor(
@@ -44,11 +24,10 @@ class ToolCounterFooter implements Component {
 
   render(): string[] {
     const branch = this.footerData.getGitBranch() ?? '-'
-    const model = this.ctx.model ? `${this.ctx.model.provider}/${this.ctx.model.id}` : 'model ?'
     const parts = [
-      formatShortPath(this.ctx.cwd),
+      formatCwd(this.ctx.cwd),
       `git ${branch}`,
-      model,
+      formatModel(this.ctx, 'model ?'),
       formatContext(this.ctx.getContextUsage()),
       formatCost(this.ctx),
       formatTools(this.toolCounts),

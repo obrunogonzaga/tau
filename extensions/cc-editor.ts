@@ -3,9 +3,11 @@ import {
   type ExtensionAPI,
   type ExtensionContext,
   type KeybindingsManager,
+  type ReadonlyFooterDataProvider,
 } from '@earendil-works/pi-coding-agent'
 import type { Component, EditorTheme, Focusable, Theme, TUI } from '@earendil-works/pi-tui'
-import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui'
+import { visibleWidth } from '@earendil-works/pi-tui'
+import { fitRounded, formatContextPercent, formatCost, formatCwd, formatModel, formatTools } from './lib/cc-format.ts'
 
 const SHORTCUTS: Array<[string, string]> = [
   ['enter', 'submit'],
@@ -22,50 +24,23 @@ const SHORTCUTS: Array<[string, string]> = [
   ['?', 'this help'],
 ]
 
-const formatCwd = (cwd: string) => {
-  const home = process.env.HOME
-  return home && cwd.startsWith(home) ? `~${cwd.slice(home.length)}` : cwd
-}
+const HINT = '? for shortcuts · / commands · ! bash'
 
-const formatContext = (ctx: ExtensionContext) => {
-  const usage = ctx.getContextUsage()
-  if (!usage || usage.percent === null) return 'ctx ?'
-  return `ctx ${Math.round(usage.percent)}%`
-}
-
-const formatModel = (ctx: ExtensionContext) =>
-  ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : 'no model'
-
-const fitRounded = (
-  left: string,
-  right: string,
-  width: number,
-  leftCorner: string,
-  rightCorner: string,
-  border: (text: string) => string,
-): string => {
-  if (width <= 1) return border(leftCorner)
-
-  let leftText = left
-  let rightText = right
-  const minimumGap = 3
-
-  while (2 + visibleWidth(leftText) + visibleWidth(rightText) + minimumGap > width && visibleWidth(rightText) > 0) {
-    rightText = truncateToWidth(rightText, Math.max(0, visibleWidth(rightText) - 1), '')
-  }
-  while (2 + visibleWidth(leftText) + visibleWidth(rightText) + minimumGap > width && visibleWidth(leftText) > 0) {
-    leftText = truncateToWidth(leftText, Math.max(0, visibleWidth(leftText) - 1), '')
-  }
-
-  const gap = Math.max(0, width - 2 - visibleWidth(leftText) - visibleWidth(rightText))
-  return `${border(leftCorner)}${leftText}${border('─'.repeat(gap))}${rightText}${border(rightCorner)}`
-}
-
-class HintFooter implements Component {
-  constructor(private readonly theme: Theme) {}
+class CcFooter implements Component {
+  constructor(
+    private readonly ctx: ExtensionContext,
+    private readonly theme: Theme,
+    private readonly footerData: ReadonlyFooterDataProvider,
+    private readonly toolCounts: ReadonlyMap<string, number>,
+  ) {}
 
   render(): string[] {
-    return [this.theme.fg('dim', '  ? for shortcuts · / commands · ! bash')]
+    const t = this.theme
+    const branch = this.footerData.getGitBranch()
+    const parts = [formatTools(this.toolCounts), formatCost(this.ctx)]
+    if (branch) parts.unshift(`git ${branch}`)
+
+    return [t.fg('dim', `  ${parts.join(' · ')}`), t.fg('dim', `  ${HINT}`)]
   }
 
   invalidate(): void {}
@@ -110,6 +85,8 @@ const isPrintableKey = (data: string) =>
   data.length >= 1 && data.charCodeAt(0) >= 32 && data.charCodeAt(0) !== 127 && !data.startsWith('\x1b')
 
 export default function ccEditor(pi: ExtensionAPI) {
+  const toolCounts = new Map<string, number>()
+
   const showShortcuts = (ctx: ExtensionContext) =>
     ctx.ui.custom<string>((_tui, theme, _kb, done) => new ShortcutsOverlay(theme, done), { overlay: true })
 
@@ -120,10 +97,17 @@ export default function ccEditor(pi: ExtensionAPI) {
     },
   })
 
+  pi.on('tool_call', (event) => {
+    toolCounts.set(event.toolName, (toolCounts.get(event.toolName) ?? 0) + 1)
+  })
+
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return
 
-    ctx.ui.setFooter((_tui: TUI, theme: Theme) => new HintFooter(theme))
+    ctx.ui.setFooter(
+      (_tui: TUI, theme: Theme, footerData: ReadonlyFooterDataProvider) =>
+        new CcFooter(ctx, theme, footerData, toolCounts),
+    )
 
     class CcRoundedEditor extends CustomEditor {
       constructor(tui: TUI, theme: EditorTheme, keybindings: KeybindingsManager) {
@@ -151,7 +135,7 @@ export default function ccEditor(pi: ExtensionAPI) {
         const thm = ctx.ui.theme
         const border = (text: string) => this.borderColor(text)
         const bottomLeft = thm.fg('muted', ` ${formatModel(ctx)} `)
-        const bottomRight = thm.fg('muted', ` ${formatContext(ctx)} · ${formatCwd(ctx.cwd)} `)
+        const bottomRight = thm.fg('muted', ` ${formatContextPercent(ctx)} · ${formatCwd(ctx.cwd)} `)
 
         lines[0] = fitRounded('', '', width, '╭', '╮', border)
         lines[lines.length - 1] = fitRounded(bottomLeft, bottomRight, width, '╰', '╯', border)

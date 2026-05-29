@@ -3,7 +3,8 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { ExtensionAPI, ExtensionContext, Theme } from '@earendil-works/pi-coding-agent'
 import type { Component, TUI } from '@earendil-works/pi-tui'
-import { truncateToWidth, visibleWidth } from '@earendil-works/pi-tui'
+import { visibleWidth } from '@earendil-works/pi-tui'
+import { fit, formatCwd, formatModel } from './lib/cc-format.ts'
 
 const MAX_WIDTH = 110
 const TWO_COL_MIN = 72
@@ -23,26 +24,6 @@ const readVersion = () => {
 }
 
 const shortenName = (name: string) => name.split(' ').slice(0, 2).join(' ')
-
-const formatCwd = (cwd: string) => {
-  const home = process.env.HOME
-  return home && cwd.startsWith(home) ? `~${cwd.slice(home.length)}` : cwd
-}
-
-const formatModel = (ctx: ExtensionContext) =>
-  ctx.model ? `${ctx.model.provider}/${ctx.model.id}` : 'model pending'
-
-const fit = (text: string, width: number, align: 'left' | 'center'): string => {
-  const w = visibleWidth(text)
-  if (w > width) return truncateToWidth(text, width, '…')
-
-  const padding = width - w
-  if (align === 'center') {
-    const left = Math.floor(padding / 2)
-    return `${' '.repeat(left)}${text}${' '.repeat(padding - left)}`
-  }
-  return `${text}${' '.repeat(padding)}`
-}
 
 class CcHeader implements Component {
   constructor(
@@ -85,7 +66,7 @@ class CcHeader implements Component {
       '',
       ...MASCOT.map((line) => t.fg('accent', line)),
       '',
-      t.fg('muted', formatModel(this.ctx)),
+      t.fg('muted', formatModel(this.ctx, 'model pending')),
       t.fg('dim', formatCwd(this.ctx.cwd)),
       '',
     ]
@@ -116,7 +97,7 @@ class CcHeader implements Component {
     const rows = [
       '',
       t.bold(t.fg('toolTitle', `Welcome back ${this.name}!`)),
-      t.fg('muted', formatModel(this.ctx)),
+      t.fg('muted', formatModel(this.ctx, 'model pending')),
       t.fg('dim', formatCwd(this.ctx.cwd)),
       '',
       t.fg('dim', 'Press ? for shortcuts · / for commands'),
