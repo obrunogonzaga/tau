@@ -83,14 +83,18 @@ const runDoctorResult = ({ env = {}, settings = true, pi = true, tmux = null } =
     writeExecutable(path.join(binDir, 'tmux'), `#!/bin/sh\necho ${JSON.stringify(tmux)}\n`)
   }
 
+  const mergedEnv = {
+    ...process.env,
+    HOME: homeDir,
+    TAU_BANNER: '0',
+    PATH: binDir,
+    ...env,
+  }
+  // The test controls tmux state via the `tmux` param; never inherit an ambient TMUX.
+  if (!('TMUX' in env)) delete mergedEnv.TMUX
+
   return spawnSync(process.execPath, [wrapperPath, 'doctor'], {
-    env: {
-      ...process.env,
-      HOME: homeDir,
-      TAU_BANNER: '0',
-      PATH: binDir,
-      ...env,
-    },
+    env: mergedEnv,
     encoding: 'utf8',
   })
 }
@@ -226,6 +230,7 @@ test('tau_configFile_containsProfilesAndAliases', () => {
   ])
   assert.deepEqual(Object.keys(config.extensionPresets).sort(), [
     'banner',
+    'cc',
     'chain',
     'damage',
     'damage-continue',
@@ -504,6 +509,107 @@ test('tau_extVibe_loadsPersonalityStack', () => {
     extensionPath('tool-counter-footer.ts'),
     'make it visible',
   ]))
+})
+
+test('tau_extCc_expandsClaudeStylePreset', () => {
+  const record = runWrapper(['ext', 'cc', 'make it claude'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--theme',
+    path.join(repoDir, '.pi', 'themes', 'tau-cc.json'),
+    '-e',
+    extensionPath('theme-cycler.ts'),
+    '-e',
+    extensionPath('cc-header.ts'),
+    '-e',
+    extensionPath('cc-editor.ts'),
+    '-e',
+    extensionPath('cc-spinner.ts'),
+    '-e',
+    extensionPath('cc-tools.ts'),
+    'make it claude',
+  ]))
+})
+
+test('tau_ccExtensions_registerLayoutContracts', () => {
+  const header = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-header.ts'), 'utf8')
+  const editor = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-editor.ts'), 'utf8')
+  const spinner = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-spinner.ts'), 'utf8')
+  const tools = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-tools.ts'), 'utf8')
+
+  assert.match(header, /setHeader\(/)
+  assert.match(header, /Welcome back/)
+  assert.match(header, /Tips for getting started/)
+  assert.match(header, /What's new/)
+  assert.match(header, /CC_THEME = 'tau-cc'/)
+  assert.match(header, /setTheme\(CC_THEME\)/)
+  assert.match(header, /pi\.exec\('git'/)
+  assert.match(editor, /setEditorComponent\(/)
+  assert.match(editor, /╭/)
+  assert.match(editor, /╰/)
+  assert.match(editor, /\? for shortcuts/)
+  assert.match(editor, /registerCommand\('shortcuts'/)
+  assert.match(editor, /this\.getText\(\)\.length === 0/)
+  assert.match(editor, /ctx\.ui\.custom/)
+  assert.match(editor, /dismissKey === '\?'/)
+  assert.match(editor, /isPrintableKey\(dismissKey\)/)
+  assert.match(spinner, /setWorkingIndicator\(/)
+  assert.match(spinner, /registerCommand\('spinner'/)
+  assert.match(spinner, /✻/)
+  assert.match(spinner, /setWorkingMessage\(/)
+  assert.match(spinner, /'agent_start'/)
+  assert.match(spinner, /esc to interrupt/)
+  assert.match(editor, /'tool_call'/)
+  assert.match(editor, /class CcFooter/)
+  assert.match(tools, /renderShell: 'self'/)
+  assert.match(tools, /'●'/)
+  assert.match(tools, /'⎿'/)
+  assert.match(tools, /registerTool\(/)
+  assert.match(tools, /registerTools\(pi, ctx\.cwd\)/)
+  assert.match(tools, /more lines/)
+  assert.match(tools, /context\.isError/)
+  assert.doesNotMatch(tools, /startsWith\('Error'\)/)
+  assert.doesNotMatch(tools, /exit code:/)
+})
+
+test('tau_ccFormatLib_isSharedAcrossExtensions', () => {
+  const lib = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'cc-format.ts'), 'utf8')
+
+  for (const helper of ['formatCwd', 'formatModel', 'formatContextPercent', 'formatCost', 'formatTools', 'fit', 'fitRounded']) {
+    assert.match(lib, new RegExp(`export const ${helper}`), helper)
+  }
+
+  const importers = ['cc-header.ts', 'cc-editor.ts', 'status-footer.ts', 'tool-counter-footer.ts']
+  for (const name of importers) {
+    const content = fs.readFileSync(path.join(repoDir, 'extensions', name), 'utf8')
+    assert.match(content, /from '\.\/lib\/cc-format\.ts'/, name)
+  }
+})
+
+test('tau_ccTheme_isDarkReadableWithTealAccent', () => {
+  const theme = JSON.parse(fs.readFileSync(path.join(repoDir, '.pi', 'themes', 'tau-cc.json'), 'utf8'))
+
+  assert.equal(theme.name, 'tau-cc')
+  assert.match(theme.colors.text, /^#/)
+  assert.match(theme.colors.accent, /^#/)
+  assert.notEqual(theme.colors.text.toLowerCase(), '#000000')
+})
+
+test('tau_ccDocs_documentPresetAndRecipe', () => {
+  const readme = fs.readFileSync(path.join(repoDir, 'README.md'), 'utf8')
+  const commands = fs.readFileSync(path.join(repoDir, 'docs', 'COMMANDS.md'), 'utf8')
+  const packageJson = JSON.parse(fs.readFileSync(path.join(repoDir, 'package.json'), 'utf8'))
+
+  assert.match(readme, /tau ext cc/)
+  assert.match(commands, /tau ext cc/)
+  assert.match(commands, /\/theme tau-cc/)
+  assert.equal(packageJson.scripts['ext:cc'], 'tau ext cc')
 })
 
 test('tau_orchestrationExtensions_registerRequiredCommands', () => {

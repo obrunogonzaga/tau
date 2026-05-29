@@ -93,6 +93,11 @@
       "extensions": ["tau-banner.ts"],
       "profile": "fast"
     },
+    "cc": {
+      "extensions": ["theme-cycler.ts", "cc-header.ts", "cc-editor.ts", "cc-spinner.ts", "cc-tools.ts"],
+      "themes": ["tau-cc"],
+      "profile": "fast"
+    },
     "chain": {
       "extensions": ["tau-banner.ts", "persona-selector.ts", "status-footer.ts", "tool-counter-footer.ts"],
       "profile": "fast"

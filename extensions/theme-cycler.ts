@@ -5,7 +5,7 @@ import { Key } from '@earendil-works/pi-tui'
 
 const THEME_KEY = 'tau-theme'
 const themeDir = join(dirname(fileURLToPath(import.meta.url)), '..', '.pi', 'themes')
-const tauThemes = ['tau-dark', 'tau-focus', 'tau-alert']
+const tauThemes = ['tau-dark', 'tau-focus', 'tau-alert', 'tau-cc']
 
 const themePath = (name: string) => join(themeDir, `${name}.json`)
 const projectThemeDir = (cwd: string) => resolve(cwd, '.pi', 'themes')

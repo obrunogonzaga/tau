@@ -62,6 +62,9 @@ const validateExtensionPreset = (name, preset, profiles) => {
   if (preset.prompt !== undefined && !hasText(preset.prompt)) {
     throw new Error(`Invalid config: extension preset ${name} has invalid prompt`)
   }
+  if (preset.themes !== undefined && (!Array.isArray(preset.themes) || preset.themes.some((theme) => !hasText(theme)))) {
+    throw new Error(`Invalid config: extension preset ${name} has invalid themes`)
+  }
 }
 
 const validateConfig = (config) => {
@@ -99,6 +102,8 @@ const profileArgs = (config, profileName) => {
 }
 
 const extensionArgs = (extensions) => extensions.flatMap((extension) => ['-e', resolveRepoPath('extensions', extension)])
+
+const themeArgs = (themes) => themes.flatMap((theme) => ['--theme', resolveRepoPath('.pi', 'themes', `${theme}.json`)])
 
 const extractProfileAt = (config, args, profileIndex) => {
   const profileArg = args[profileIndex]
@@ -158,7 +163,13 @@ const resolveArgs = (config, rawInputArgs) => {
     const promptArgs = shouldAppendPrompt() && preset.prompt ? ['--append-system-prompt', preset.prompt] : []
 
     return {
-      args: [...profileArgs(config, selectedProfile), ...extensionArgs(preset.extensions), ...promptArgs, ...presetRestArgs],
+      args: [
+        ...profileArgs(config, selectedProfile),
+        ...themeArgs(preset.themes ?? []),
+        ...extensionArgs(preset.extensions),
+        ...promptArgs,
+        ...presetRestArgs,
+      ],
       profileName: selectedProfile,
     }
   }
@@ -233,7 +244,8 @@ const checkSessions = () => {
 const checkTmux = () => {
   if (!process.env.TMUX) return { ok: true, status: 'skip', detail: 'not inside tmux' }
   const result = spawnSync('tmux', ['show-options', '-gqv', 'extended-keys'], { encoding: 'utf8' })
-  const value = result.stdout.trim() || result.stderr.trim() || 'missing'
+  if (result.error) return { ok: false, detail: result.error.message }
+  const value = result.stdout?.trim() || result.stderr?.trim() || 'missing'
   return { ok: result.status === 0 && value === 'on', detail: value }
 }
 

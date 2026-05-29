@@ -106,6 +106,18 @@ Goal:
 - [x] MYPI-49 Improve Tau banner personality
 - [x] MYPI-50 Add theme docs and smoke checks
 
+## Milestone 13: Claude Code layout parity (Tau identity)
+
+Goal: make Tau's TUI feel like Claude Code in structure while keeping Tau's teal
+accent and `tau` wording. Layout parity, not a brand clone.
+
+- [x] MYPI-51 Add `tau-cc` theme tuned to Claude Code tonal layout
+- [x] MYPI-52 Add Claude-style welcome header
+- [x] MYPI-53 Add Claude-style input box border and hint line
+- [x] MYPI-54 Add star spinner with status words
+- [x] MYPI-55 Add Claude-style tool and message rendering
+- [x] MYPI-56 Add `cc` extension preset, recipe, docs, smoke checks
+
 ## Issues
 
 ### MYPI-1: Add task aliases
@@ -940,3 +952,108 @@ Expected outcome:
 - tests cover `vibe` preset expansion
 - tests verify Tau theme files exist
 - docs include commands and screenshots if useful
+
+### MYPI-51: Add `tau-cc` theme tuned to Claude Code tonal layout
+
+Add `.pi/themes/tau-cc.json` matching Claude Code's tonal structure.
+
+Why:
+
+Claude Code's calm look comes from low-contrast neutral surfaces with one warm
+accent, not from many bright colors. Tau should reuse that tonal layout but keep
+its teal accent instead of Anthropic coral.
+
+Expected outcome:
+
+- neutral surface/background tones close to Claude Code
+- teal accent retained as the single highlight color
+- green/red diff and success/error colors readable in dark terminals
+- syntax colors kept calm, not neon
+- theme registered alongside existing Tau themes
+
+### MYPI-52: Add Claude-style welcome header
+
+Add a header component showing a `✻ Welcome to Tau` box with cwd, model, tips.
+
+Why:
+
+Claude Code opens with a compact bordered welcome card, not a banner line. This
+is the first signal of the layout we are matching.
+
+Expected outcome:
+
+- `✻ Welcome to Tau` title
+- cwd shown with `~` home shortening
+- current model shown, with pending fallback
+- one short tips line
+- compact, no giant ASCII art
+- replaces or coexists cleanly with existing `tau-banner`
+
+### MYPI-53: Add Claude-style input box border and hint line
+
+Add a `CustomEditor` with a rounded border and a bottom hint line.
+
+Why:
+
+The rounded input box plus the `? for shortcuts` hint line is the most
+recognizable part of Claude Code's layout.
+
+Expected outcome:
+
+- rounded `╭ ╮ ╰ ╯` border around the input
+- left/right border labels show cwd and context %
+- bottom hint line shows shortcuts and mode
+- degrades cleanly on narrow terminals
+- uses theme `border` / `borderAccent` colors
+
+### MYPI-54: Add star spinner with status words
+
+Add a working indicator using `setWorkingIndicator()` with star frames and
+rotating status words.
+
+Why:
+
+Claude Code's `✻ Cogitating…` star spinner with whimsical verbs is a core part
+of its personality and the layout we are matching.
+
+Expected outcome:
+
+- animated star frames (`✻ ✳ ✶ ✺`)
+- rotating status verb plus elapsed seconds
+- `esc to interrupt` hint
+- frames use theme accent color
+- restorable to Pi default
+
+### MYPI-55: Add Claude-style tool and message rendering
+
+Adapt tool/message rendering to Claude Code's bullet and tree style.
+
+Why:
+
+Claude Code renders tool calls as `● Tool(args)` with `⎿` indented output. This
+is the densest visual difference from Pi defaults.
+
+Expected outcome:
+
+- tool calls prefixed with `●`
+- tool output indented under `⎿`
+- success/error tinting via theme colors
+- long output truncated with a clear marker
+- no crash when output is empty or streaming
+
+### MYPI-56: Add `cc` extension preset, recipe, docs, smoke checks
+
+Bundle the above into one launchable preset.
+
+Why:
+
+The look should launch with one command, like `vibe`, and stay protected by
+static checks.
+
+Expected outcome:
+
+- `tau ext cc "task"` loads cc header, border, spinner, renderer, footers
+- `npm run ext:cc` exists
+- preset defaults to `tau-cc` theme
+- README and `docs/COMMANDS.md` document usage
+- smoke checks cover preset expansion, theme file presence, and component contracts

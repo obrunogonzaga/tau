@@ -12,6 +12,7 @@
     "tau": "node ./bin/tau.js",
     "setup:pi": "bash ./scripts/setup-pi-settings.sh",
     "ext:banner": "tau ext banner",
+    "ext:cc": "tau ext cc",
     "ext:minimal": "tau ext minimal",
     "ext:focus": "tau ext focus",
     "ext:vibe": "tau ext vibe",
