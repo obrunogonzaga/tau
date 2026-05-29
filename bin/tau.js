@@ -19,27 +19,35 @@ const resolveConfigPath = () => {
 const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'))
 
 const splitModelId = (modelId) => {
-  const [provider, model] = modelId.split('/')
+  const slash = modelId.indexOf('/')
 
-  return { model, provider }
+  return { provider: modelId.slice(0, slash), model: modelId.slice(slash + 1) }
 }
 
 const modelPattern = (modelConfig) => `${modelConfig.id}:${modelConfig.thinking}`
 
 const profileBaseArgs = (modelConfig) => {
-  const { model, provider } = splitModelId(modelConfig.id)
+  if (!modelConfig.id) return []
 
+  const { model, provider } = splitModelId(modelConfig.id)
   return ['--provider', provider, '--model', model, '--thinking', modelConfig.thinking]
 }
 
 const hasText = (value) => typeof value === 'string' && value.length > 0
 
 const validateProfile = (name, profile, profiles) => {
-  if (!profile || !hasText(profile.id) || !hasText(profile.thinking)) {
-    throw new Error(`Invalid config: profile ${name} requires id and thinking`)
+  if (!profile || typeof profile !== 'object') {
+    throw new Error(`Invalid config: profile ${name} must be an object`)
   }
-  if (!profile.id.includes('/')) {
-    throw new Error(`Invalid config: profile ${name} id must be <provider>/<model>`)
+  // A profile with no id is a passthrough: tau forwards no provider/model and
+  // pi uses its own configured default/login. Useful as a portable default.
+  if (profile.id !== undefined) {
+    if (!hasText(profile.id) || !profile.id.includes('/')) {
+      throw new Error(`Invalid config: profile ${name} id must be <provider>/<model>`)
+    }
+    if (!hasText(profile.thinking)) {
+      throw new Error(`Invalid config: profile ${name} requires thinking`)
+    }
   }
   if (profile.models?.some((modelName) => !profiles[modelName])) {
     throw new Error(`Invalid config: profile ${name} has unknown model reference`)
@@ -82,9 +90,25 @@ const validateConfig = (config) => {
   )
 }
 
+const localConfigPath = () =>
+  process.env.TAU_LOCAL_CONFIG || path.join(os.homedir(), '.pi', 'tau', 'config.local.json')
+
+const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
+
+const deepMerge = (base, overlay) => {
+  if (!isPlainObject(base) || !isPlainObject(overlay)) return overlay
+  const merged = { ...base }
+  for (const [key, value] of Object.entries(overlay)) {
+    merged[key] = isPlainObject(value) && isPlainObject(base[key]) ? deepMerge(base[key], value) : value
+  }
+  return merged
+}
+
 const loadConfig = () => {
   try {
-    const config = readJson(resolveConfigPath())
+    let config = readJson(resolveConfigPath())
+    const overlayPath = localConfigPath()
+    if (fs.existsSync(overlayPath)) config = deepMerge(config, readJson(overlayPath))
     validateConfig(config)
     return config
   } catch (error) {
@@ -277,6 +301,7 @@ const runRequiredCheck = (name, check) => {
 const resolveProviderFromProfile = (config, profileName) => {
   const profile = config.profiles[profileName]
   if (!profile) throw new Error(`Invalid config: unknown profile ${profileName}`)
+  if (!profile.id) return null
 
   const { provider } = splitModelId(profile.id)
   return provider
@@ -284,6 +309,7 @@ const resolveProviderFromProfile = (config, profileName) => {
 
 const requireAuthForProfile = (config, profileName) => {
   const provider = resolveProviderFromProfile(config, profileName)
+  if (!provider) return // passthrough profile: pi handles auth/login itself
   const names = config.providerKeys?.[provider]
 
   if (!Array.isArray(names)) {
@@ -308,7 +334,11 @@ const runDoctor = (config) => {
     runRequiredCheck('settings', checkSettings),
     runRequiredCheck('sessions', checkSessions),
   ]
+  const defaultProfile = config.profiles[config.defaultProfile]
+  const target = defaultProfile?.id ? `${config.defaultProfile} (${defaultProfile.id})` : `${config.defaultProfile} (pi default / login)`
+  printCheck('ok', 'default profile', target)
   Object.entries(config.providerKeys ?? {}).forEach(([provider, names]) => checkProviderKeys(provider, names))
+  console.log(`[tip] per-machine default: create ${localConfigPath()} with {"defaultProfile":"local"} to use pi's own login`)
   return results.every(Boolean) ? 0 : 1
 }
 

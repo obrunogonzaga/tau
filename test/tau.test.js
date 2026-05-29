@@ -51,6 +51,7 @@ fs.writeFileSync(process.env.TAU_TEST_RECORD, JSON.stringify({
       GITHUB_TOKEN: process.env.GITHUB_TOKEN ?? 'gh-test-token',
       TAU_BANNER: '0',
       TAU_TEST_RECORD: recordPath,
+      TAU_LOCAL_CONFIG: path.join(tempDir, 'no-local-overlay.json'),
       PATH: `${binDir}:${process.env.PATH}`,
       ...env,
     },
@@ -152,6 +153,60 @@ test('tau_fastProfile_prependsFastModelArgs', () => {
   assert.equal(record.sessionDir, path.join(os.homedir(), '.pi', 'tau', 'sessions'))
 })
 
+test('tau_localProfile_isPassthroughWithNoModelArgs', () => {
+  const record = runWrapper(['--profile', 'local', 'hi'])
+
+  assert.deepEqual(record.args, withSystemPrompt(['hi']))
+})
+
+test('tau_localProfile_skipsAuthWhenNoKeys', () => {
+  const { result } = runWrapperResult(['--profile', 'local', 'hi'], {
+    OPENAI_API_KEY: '',
+    GITHUB_TOKEN: '',
+  })
+
+  assert.equal(result.status, 0)
+})
+
+test('tau_localOverlay_overridesDefaultProfile', () => {
+  const overlayDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-overlay-'))
+  const overlayPath = path.join(overlayDir, 'config.local.json')
+  fs.writeFileSync(overlayPath, JSON.stringify({ defaultProfile: 'local' }))
+
+  const { record, result } = runWrapperResult(['just answer'], { TAU_LOCAL_CONFIG: overlayPath })
+
+  assert.equal(result.status, 0)
+  assert.deepEqual(record.args, withSystemPrompt(['just answer']))
+})
+
+test('tau_localOverlay_mergesProfileFields', () => {
+  const overlayDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tau-overlay-'))
+  const overlayPath = path.join(overlayDir, 'config.local.json')
+  fs.writeFileSync(
+    overlayPath,
+    JSON.stringify({
+      profiles: { fast: { id: 'openrouter/anthropic/claude-sonnet-4', thinking: 'medium' } },
+      providerKeys: { openrouter: ['OPENROUTER_API_KEY'] },
+    }),
+  )
+
+  const { record, result } = runWrapperResult(['fast', 'hi'], {
+    TAU_LOCAL_CONFIG: overlayPath,
+    OPENROUTER_API_KEY: 'or-test-key',
+  })
+
+  assert.equal(result.status, 0)
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openrouter',
+    '--model',
+    'anthropic/claude-sonnet-4',
+    '--thinking',
+    'medium',
+    'hi',
+  ]))
+})
+
 test('tau_noArgs_loadsTauBanner', () => {
   const record = runWrapper([])
 
@@ -212,7 +267,7 @@ test('tau_routerProfile_addsDailyModelCyclingArgs', () => {
 })
 
 test('tau_configFile_containsProfilesAndAliases', () => {
-  assert.deepEqual(Object.keys(config.profiles).sort(), ['deep', 'fast', 'router', 'work'])
+  assert.deepEqual(Object.keys(config.profiles).sort(), ['deep', 'fast', 'local', 'router', 'work'])
   assert.deepEqual(Object.keys(config.aliases).sort(), [
     'ask',
     'code',
@@ -1496,6 +1551,7 @@ test('tau_doctor_reportsConcisePassingChecks', () => {
   assert.match(result.stdout, /\[ok\] pi/)
   assert.match(result.stdout, /\[ok\] settings/)
   assert.match(result.stdout, /\[ok\] sessions/)
+  assert.match(result.stdout, /\[ok\] default profile/)
   assert.match(result.stdout, /\[ok\] key github-copilot: present/)
   assert.match(result.stdout, /\[ok\] key openai-codex: (present|tokenless\/login mode)/)
   assert.doesNotMatch(result.stdout, /secret-openai|secret-github/)

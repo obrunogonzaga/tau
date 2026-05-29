@@ -1,0 +1,14 @@
+{
+  "_comment": "Per-machine overlay. Copy to config/tau.config.local.json (gitignored) or point TAU_LOCAL_CONFIG at it. Deep-merged over config/tau.config.json. Set only what differs on this machine.",
+
+  "_use_pi_login": "Simplest portable default: no API key needed, uses whatever pi is logged into.",
+  "defaultProfile": "local",
+
+  "_or_override_a_profile": "Example: point fast at a provider you actually have (needs the provider key).",
+  "_example_profiles": {
+    "fast": { "id": "openrouter/anthropic/claude-sonnet-4", "thinking": "medium" }
+  },
+  "_example_providerKeys": {
+    "openrouter": ["OPENROUTER_API_KEY"]
+  }
+}

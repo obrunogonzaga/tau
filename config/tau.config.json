@@ -13,6 +13,7 @@
       "id": "openai-codex/gpt-5.3-codex-spark",
       "thinking": "low"
     },
+    "local": {},
     "router": {
       "id": "openai-codex/gpt-5.3-codex-spark",
       "thinking": "low",

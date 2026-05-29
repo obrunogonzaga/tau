@@ -9,3 +9,6 @@ node_modules/
 # Private local pi config (kept in repo via example template)
 .pi/agent/settings.json
 .pi/my-pi/logs/
+
+# Machine-local tau config overlay (per-machine defaults)
+config/tau.config.local.json
