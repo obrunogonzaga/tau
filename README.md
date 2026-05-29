@@ -51,7 +51,8 @@ npm run tau -- fast "summarize this repo"
 | `tau ship "task"` | Explicit implementation mode. |
 | `tau doctor` | Local health check. |
 | `tau ext vibe "task"` | Banner, theme cycler, and live footers. |
-| `tau ext cc "task"` | Claude Code-style layout: welcome box, rounded input, star spinner, bullet tools. |
+| `tau ext cc "task"` | Claude Code-style layout, `tau` identity. |
+| `tau ext work "task"` | Same layout, `picpay` identity for work. |
 | `tau ext orchestrate "task"` | Subagents, replay, cross-agent loader. |
 
 Full command reference: [docs/COMMANDS.md](docs/COMMANDS.md).
@@ -110,7 +111,8 @@ Inside Tau:
 | `tau ext team` | Banner + persona selector + footers. |
 | `tau ext chain` | Banner + persona selector + footers. |
 | `tau ext vibe` | Banner + theme cycler + status/tool footers. |
-| `tau ext cc` | Claude Code layout: `tau-cc` theme + welcome header + rounded input + star spinner + bullet tool rendering. |
+| `tau ext cc` | Claude Code layout with the `tau` identity (teal `tau-cc` theme). |
+| `tau ext work` | Same layout with the `picpay` identity (PicPay green theme, `PicPay Code` wording). |
 | `tau ext orchestrate` | Banner + subagents + replay + cross-agent loader + footers. |
 
 Common in-session commands:

@@ -118,6 +118,19 @@ accent and `tau` wording. Layout parity, not a brand clone.
 - [x] MYPI-55 Add Claude-style tool and message rendering
 - [x] MYPI-56 Add `cc` extension preset, recipe, docs, smoke checks
 
+## Milestone 14: Multi-brand identity (tau + picpay)
+
+Goal: keep one shared `cc` layout but switch identity. Personal sessions use the
+`tau` brand (teal); work sessions use a `picpay` brand (PicPay green). Same
+layout, spinner, tools, and footer; only name, colors, mascot, and copy change.
+
+- [x] MYPI-57 Extract a data-driven brand descriptor
+- [x] MYPI-58 Add PicPay theme and brand pack
+- [x] MYPI-59 Make cc extensions brand-aware
+- [x] MYPI-60 Add brand selection via presets and env override
+- [ ] MYPI-61 Add config-driven auto-detection by location
+- [ ] MYPI-62 Add brand tests and docs
+
 ## Issues
 
 ### MYPI-1: Add task aliases
@@ -1057,3 +1070,110 @@ Expected outcome:
 - preset defaults to `tau-cc` theme
 - README and `docs/COMMANDS.md` document usage
 - smoke checks cover preset expansion, theme file presence, and component contracts
+
+### MYPI-57: Extract a data-driven brand descriptor
+
+Move hardcoded `tau` branding out of `cc-header` into a brand descriptor.
+
+Why:
+
+The `cc` layout is brand-agnostic in structure; only strings and the accent
+color say "tau". Centralizing them makes a second identity a data change, not a
+code change.
+
+Expected outcome:
+
+- a brand shape: `id`, `name`/title, `themeName`, `accent`, `mascot`, `tagline`,
+  `tips`, `whatsNew`
+- a brand registry (config or `.pi/brands`) with a `tau` entry that reproduces
+  today's look exactly
+- `cc-header` and `tau-banner` read the active brand, no inline `tau` strings
+- default brand is `tau`
+
+### MYPI-58: Add PicPay theme and brand pack
+
+Add a second identity for work sessions.
+
+Why:
+
+Work sessions should read as a distinct product (PicPay Code) while reusing the
+same layout and behavior.
+
+Expected outcome:
+
+- `.pi/themes/picpay.json` with PicPay green accent, readable in dark terminals
+- a `picpay` brand entry: name `PicPay Code`, green accent, mascot/wordmark, work
+  tagline and tips
+- colors and copy reviewed for the work context
+- both `tau` and `picpay` brands documented
+
+### MYPI-59: Make cc extensions brand-aware
+
+Wire the active brand through the cc extensions.
+
+Why:
+
+Header, banner, and theme must follow whichever brand is selected, without
+duplicating the extensions.
+
+Expected outcome:
+
+- cc extensions resolve the active brand at session start
+- the brand's theme is applied (registered at startup, no late `setTheme`)
+- spinner/footer/tool rendering stay shared and unchanged
+- unknown brand falls back to `tau` with a clear message
+
+### MYPI-60: Add brand selection via presets and env override
+
+Let the user pick a brand explicitly.
+
+Why:
+
+Explicit selection is the simplest reliable switch and the override for
+auto-detection.
+
+Expected outcome:
+
+- `tau ext cc` uses `tau`; `tau ext work` (or `picpay`) uses `picpay`
+- `TAU_BRAND=picpay` overrides brand for a session or shell profile
+- precedence is documented: env > preset > auto-detect > default
+- presets register the matching theme via the existing `--theme` flag
+
+### MYPI-61: Add config-driven auto-detection by location
+
+Pick the brand automatically for work.
+
+Why:
+
+"When I work" should need no thinking; work directories should switch to PicPay
+on their own.
+
+Expected outcome:
+
+- config rules map context to brand: cwd path globs and/or git remote regex
+- a session in a work repo resolves to `picpay`; everything else to `tau`
+- rules live in config, no hardcoded paths in code
+- explicit env/preset always overrides auto-detection
+
+### MYPI-62: Add brand tests and docs
+
+Lock the brand system.
+
+Why:
+
+Identity switching touches config, themes, and runtime selection; static checks
+protect it.
+
+Expected outcome:
+
+- tests cover brand registry shape, theme file presence, and preset expansion
+- tests cover selection precedence (env > preset > auto-detect > default)
+- tests cover auto-detection rule matching
+- README and `docs/COMMANDS.md` document brands, switching, and detection
+
+## Unresolved questions
+
+- exact PicPay green hex(es) and any secondary accent?
+- what defines a "work" repo: cwd path prefixes, git remote org, or both?
+- preset name for work: `work` or `picpay`?
+- should the welcome copy/tips differ per brand, or only name + colors?

@@ -70,7 +70,8 @@ tau ship --profile=work "force Copilot"
 | `tau ext team "task"` | Persona selector stack. |
 | `tau ext chain "task"` | Chain/persona stack. |
 | `tau ext vibe "task"` | Banner + theme cycler + status/tool footers. |
-| `tau ext cc "task"` | Claude Code layout: `tau-cc` theme + welcome header + rounded input + star spinner + bullet tools. |
+| `tau ext cc "task"` | Claude Code layout, `tau` identity (teal). |
+| `tau ext work "task"` | Same layout, `picpay` identity (PicPay green, `PicPay Code`). |
 | `tau ext orchestrate "task"` | Subagents + replay + cross-agent loader. |
 
 NPM shortcuts:
@@ -81,6 +82,7 @@ npm run ext:minimal
 npm run ext:focus
 npm run ext:vibe
 npm run ext:cc
+npm run ext:work
 npm run ext:orchestrate
 npm run ext:safe
 npm run ext:team
@@ -122,8 +124,28 @@ Theme shortcuts:
 
 | Command | Description |
 | --- | --- |
-| `/spinner` | Reapply the Tau star spinner. |
+| `/spinner` | Reapply the star spinner. |
 | `/spinner reset` | Restore Pi's default spinner. |
+
+#### Brands
+
+The `cc` layout has two identities, selected by brand:
+
+| Brand | Launch | Identity |
+| --- | --- | --- |
+| `tau` | `tau ext cc` | Personal — teal `tau-cc` theme, `tau` wording. |
+| `picpay` | `tau ext work` | Work — PicPay green theme, `PicPay Code` wording. |
+
+Override the brand for any `cc`/`work` session with `TAU_BRAND`:
+
+```bash
+TAU_BRAND=picpay tau ext cc   # picpay identity on the cc preset
+TAU_BRAND=tau tau ext work    # force tau identity on the work preset
+```
+
+Precedence: `TAU_BRAND` env > preset `brand` > default (`tau`). Both presets
+preload the `tau-cc` and `picpay` themes, so `/theme tau-cc` and `/theme picpay`
+switch live.
 
 ### Personas
 
