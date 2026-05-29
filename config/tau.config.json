@@ -95,7 +95,13 @@
     },
     "cc": {
       "extensions": ["theme-cycler.ts", "cc-header.ts", "cc-editor.ts", "cc-spinner.ts", "cc-tools.ts"],
-      "themes": ["tau-cc"],
+      "themes": ["tau-cc", "picpay"],
+      "profile": "fast"
+    },
+    "work": {
+      "extensions": ["theme-cycler.ts", "cc-header.ts", "cc-editor.ts", "cc-spinner.ts", "cc-tools.ts"],
+      "themes": ["tau-cc", "picpay"],
+      "brand": "picpay",
       "profile": "fast"
     },
     "chain": {

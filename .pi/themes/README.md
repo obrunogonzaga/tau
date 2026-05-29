@@ -8,6 +8,7 @@ Local TUI themes live here.
 - `tau-focus`: lower contrast, fewer bright accents.
 - `tau-alert`: stronger warning/error contrast for safety and debug work.
 - `tau-cc`: Claude Code-style calm palette with teal accent (default in `tau ext cc`).
+- `picpay`: work identity — calm palette with PicPay green accent (default in `tau ext work`).
 
 Use inside `tau ext vibe` or `tau ext cc`:
 

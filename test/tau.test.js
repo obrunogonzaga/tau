@@ -37,7 +37,8 @@ import fs from 'node:fs'
 fs.writeFileSync(process.env.TAU_TEST_RECORD, JSON.stringify({
   args: process.argv.slice(2),
   agentDir: process.env.PI_CODING_AGENT_DIR,
-  sessionDir: process.env.PI_CODING_AGENT_SESSION_DIR
+  sessionDir: process.env.PI_CODING_AGENT_SESSION_DIR,
+  brand: process.env.TAU_BRAND
 }))
 `,
     { mode: 0o755 },
@@ -240,6 +241,7 @@ test('tau_configFile_containsProfilesAndAliases', () => {
     'safe',
     'team',
     'vibe',
+    'work',
   ])
 })
 
@@ -523,6 +525,8 @@ test('tau_extCc_expandsClaudeStylePreset', () => {
     'low',
     '--theme',
     path.join(repoDir, '.pi', 'themes', 'tau-cc.json'),
+    '--theme',
+    path.join(repoDir, '.pi', 'themes', 'picpay.json'),
     '-e',
     extensionPath('theme-cycler.ts'),
     '-e',
@@ -537,6 +541,54 @@ test('tau_extCc_expandsClaudeStylePreset', () => {
   ]))
 })
 
+test('tau_extWork_usesPicpayBrand', () => {
+  const record = runWrapper(['ext', 'work', 'ship it'])
+
+  assert.deepEqual(record.brand, 'picpay')
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '--theme',
+    path.join(repoDir, '.pi', 'themes', 'tau-cc.json'),
+    '--theme',
+    path.join(repoDir, '.pi', 'themes', 'picpay.json'),
+    '-e',
+    extensionPath('theme-cycler.ts'),
+    '-e',
+    extensionPath('cc-header.ts'),
+    '-e',
+    extensionPath('cc-editor.ts'),
+    '-e',
+    extensionPath('cc-spinner.ts'),
+    '-e',
+    extensionPath('cc-tools.ts'),
+    'ship it',
+  ]))
+})
+
+test('tau_extCc_doesNotSetBrand', () => {
+  const record = runWrapper(['ext', 'cc', 'personal'])
+  assert.equal(record.brand, undefined)
+})
+
+test('tau_brandRegistry_definesTauAndPicpay', () => {
+  const brand = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'cc-brand.ts'), 'utf8')
+  assert.match(brand, /id: 'tau'/)
+  assert.match(brand, /id: 'picpay'/)
+  assert.match(brand, /themeName: 'tau-cc'/)
+  assert.match(brand, /themeName: 'picpay'/)
+  assert.match(brand, /process\.env\.TAU_BRAND/)
+
+  const picpay = JSON.parse(fs.readFileSync(path.join(repoDir, '.pi', 'themes', 'picpay.json'), 'utf8'))
+  assert.equal(picpay.name, 'picpay')
+  assert.match(picpay.colors.accent, /^#/)
+  assert.notEqual(picpay.colors.accent.toLowerCase(), '#000000')
+})
+
 test('tau_ccExtensions_registerLayoutContracts', () => {
   const header = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-header.ts'), 'utf8')
   const editor = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-editor.ts'), 'utf8')
@@ -544,11 +596,11 @@ test('tau_ccExtensions_registerLayoutContracts', () => {
   const tools = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-tools.ts'), 'utf8')
 
   assert.match(header, /setHeader\(/)
-  assert.match(header, /Welcome back/)
+  assert.match(header, /brand\.greeting/)
   assert.match(header, /Tips for getting started/)
   assert.match(header, /What's new/)
-  assert.match(header, /CC_THEME = 'tau-cc'/)
-  assert.match(header, /setTheme\(CC_THEME\)/)
+  assert.match(header, /resolveBrand\(\)/)
+  assert.match(header, /setTheme\(brand\.themeName\)/)
   assert.match(header, /pi\.exec\('git'/)
   assert.match(editor, /setEditorComponent\(/)
   assert.match(editor, /╭/)

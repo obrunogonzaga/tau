@@ -65,6 +65,9 @@ const validateExtensionPreset = (name, preset, profiles) => {
   if (preset.themes !== undefined && (!Array.isArray(preset.themes) || preset.themes.some((theme) => !hasText(theme)))) {
     throw new Error(`Invalid config: extension preset ${name} has invalid themes`)
   }
+  if (preset.brand !== undefined && !hasText(preset.brand)) {
+    throw new Error(`Invalid config: extension preset ${name} has invalid brand`)
+  }
 }
 
 const validateConfig = (config) => {
@@ -171,6 +174,7 @@ const resolveArgs = (config, rawInputArgs) => {
         ...presetRestArgs,
       ],
       profileName: selectedProfile,
+      brand: preset.brand,
     }
   }
 
@@ -311,6 +315,7 @@ const runDoctor = (config) => {
 let args
 let config
 let selectedProfileName
+let selectedBrand
 
 try {
   config = loadConfig()
@@ -318,6 +323,7 @@ try {
   const resolved = resolveArgs(config, rawArgs)
   args = resolved.args
   selectedProfileName = resolved.profileName
+  selectedBrand = resolved.brand
   if (!shouldSkipAuthCheck()) {
     requireAuthForProfile(config, selectedProfileName)
   }
@@ -346,10 +352,12 @@ try {
   fs.appendFileSync(logFile, logEntry)
 } catch {}
 
+const resolvedBrand = process.env.TAU_BRAND ?? selectedBrand
 const env = {
   ...process.env,
   PI_CODING_AGENT_DIR: configDir,
   PI_CODING_AGENT_SESSION_DIR: sessionDir,
+  ...(resolvedBrand ? { TAU_BRAND: resolvedBrand } : {}),
 }
 
 const child = spawn('pi', args, {

@@ -124,10 +124,10 @@ Goal: keep one shared `cc` layout but switch identity. Personal sessions use the
 `tau` brand (teal); work sessions use a `picpay` brand (PicPay green). Same
 layout, spinner, tools, and footer; only name, colors, mascot, and copy change.
 
-- [ ] MYPI-57 Extract a data-driven brand descriptor
-- [ ] MYPI-58 Add PicPay theme and brand pack
-- [ ] MYPI-59 Make cc extensions brand-aware
-- [ ] MYPI-60 Add brand selection via presets and env override
+- [x] MYPI-57 Extract a data-driven brand descriptor
+- [x] MYPI-58 Add PicPay theme and brand pack
+- [x] MYPI-59 Make cc extensions brand-aware
+- [x] MYPI-60 Add brand selection via presets and env override
 - [ ] MYPI-61 Add config-driven auto-detection by location
 - [ ] MYPI-62 Add brand tests and docs
 

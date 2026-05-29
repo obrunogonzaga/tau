@@ -4,14 +4,12 @@ import { fileURLToPath } from 'node:url'
 import type { ExtensionAPI, ExtensionContext, Theme } from '@earendil-works/pi-coding-agent'
 import type { Component, TUI } from '@earendil-works/pi-tui'
 import { visibleWidth } from '@earendil-works/pi-tui'
+import { type Brand, resolveBrand } from './lib/cc-brand.ts'
 import { fit, formatCwd, formatModel } from './lib/cc-format.ts'
 
 const MAX_WIDTH = 110
 const TWO_COL_MIN = 72
 const PLAIN_MIN = 28
-const CC_THEME = 'tau-cc'
-
-const MASCOT = [' ▄███▄ ', '█ ▘ ▘ █', ' █████ ', ' ▀   ▀ ']
 
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -29,6 +27,7 @@ class CcHeader implements Component {
   constructor(
     private readonly ctx: ExtensionContext,
     private readonly theme: Theme,
+    private readonly brand: Brand,
     private readonly name: string,
     private readonly version: string,
   ) {}
@@ -62,9 +61,9 @@ class CcHeader implements Component {
     const t = this.theme
     return [
       '',
-      t.bold(t.fg('toolTitle', `Welcome back ${this.name}!`)),
+      t.bold(t.fg('toolTitle', `${this.brand.greeting} ${this.name}!`)),
       '',
-      ...MASCOT.map((line) => t.fg('accent', line)),
+      ...this.brand.mascot.map((line) => t.fg('accent', line)),
       '',
       t.fg('muted', formatModel(this.ctx, 'model pending')),
       t.fg('dim', formatCwd(this.ctx.cwd)),
@@ -74,17 +73,17 @@ class CcHeader implements Component {
 
   private rightColumn(width: number): string[] {
     const t = this.theme
+    const [whatsNewLead, ...whatsNewRest] = this.brand.whatsNew
     return [
       '',
       t.bold(t.fg('accent', 'Tips for getting started')),
-      t.fg('text', 'Run tau doctor to check your setup'),
-      t.fg('text', 'Press ? for shortcuts · / for commands'),
+      ...this.brand.tips.map((tip) => t.fg('text', tip)),
       '',
       t.fg('dim', '─'.repeat(Math.max(0, width))),
       t.bold(t.fg('accent', "What's new")),
-      t.fg('text', 'Claude Code layout via tau ext cc'),
-      t.fg('text', 'Switch themes with /theme tau-cc'),
-      t.fg('dim', '/help for more'),
+      t.fg('text', whatsNewLead ?? ''),
+      ...whatsNewRest.slice(0, -1).map((line) => t.fg('text', line)),
+      t.fg('dim', whatsNewRest.length > 0 ? whatsNewRest[whatsNewRest.length - 1] : ''),
     ]
   }
 
@@ -96,11 +95,11 @@ class CcHeader implements Component {
 
     const rows = [
       '',
-      t.bold(t.fg('toolTitle', `Welcome back ${this.name}!`)),
+      t.bold(t.fg('toolTitle', `${this.brand.greeting} ${this.name}!`)),
       t.fg('muted', formatModel(this.ctx, 'model pending')),
       t.fg('dim', formatCwd(this.ctx.cwd)),
       '',
-      t.fg('dim', 'Press ? for shortcuts · / for commands'),
+      t.fg('dim', this.brand.tips[1]),
       '',
     ]
     return [this.topBorder(boxWidth), ...rows.map(row), this.bottomBorder(boxWidth), '']
@@ -108,7 +107,7 @@ class CcHeader implements Component {
 
   private topBorder(boxWidth: number): string {
     const t = this.theme
-    const title = this.version ? `tau v${this.version}` : 'tau'
+    const title = this.brand.showVersion && this.version ? `${this.brand.title} v${this.version}` : this.brand.title
     const fill = Math.max(0, boxWidth - 2 - 3 - visibleWidth(title))
     return t.fg('border', '╭─ ') + t.fg('accent', title) + t.fg('border', ` ${'─'.repeat(fill)}╮`)
   }
@@ -118,13 +117,13 @@ class CcHeader implements Component {
   }
 
   private tagline(): string {
-    return this.theme.fg('dim', 'tau · inspect first · edit narrow · test · report')
+    return this.theme.fg('dim', this.brand.tagline)
   }
 
   private renderPlain(): string[] {
     const t = this.theme
     return [
-      t.bold(t.fg('toolTitle', `Welcome back ${this.name}!`)),
+      t.bold(t.fg('toolTitle', `${this.brand.greeting} ${this.name}!`)),
       t.fg('dim', formatCwd(this.ctx.cwd)),
       '',
     ]
@@ -139,12 +138,14 @@ export default function ccHeader(pi: ExtensionAPI) {
   pi.on('session_start', (_event, ctx) => {
     if (!ctx.hasUI) return
 
+    const brand = resolveBrand()
     let name = process.env.USER ?? 'there'
-    const applyHeader = () => ctx.ui.setHeader((_tui: TUI, theme: Theme) => new CcHeader(ctx, theme, name, version))
+    const applyHeader = () =>
+      ctx.ui.setHeader((_tui: TUI, theme: Theme) => new CcHeader(ctx, theme, brand, name, version))
 
-    if (ctx.ui.theme.name !== CC_THEME) ctx.ui.setTheme(CC_THEME)
+    if (ctx.ui.theme.name !== brand.themeName) ctx.ui.setTheme(brand.themeName)
     applyHeader()
-    ctx.ui.setTitle('tau')
+    ctx.ui.setTitle(brand.title)
 
     pi.exec('git', ['config', 'user.name'], { cwd: ctx.cwd, timeout: 2000 })
       .then((result) => {
