@@ -204,7 +204,6 @@ Wrapper knobs:
 
 ```bash
 TAU_SETTINGS_PATH=./profiles/dev.json tau
-TAU_BANNER=my-ops-pi tau
 TAU_NO_PROMPT=1 tau ask "raw upstream behavior"
 TAU_SKIP_AUTH_CHECK=1 tau
 ```

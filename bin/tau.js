@@ -371,11 +371,6 @@ if (configuredPath && !fs.existsSync(settingsPath)) {
 const logsDir = path.join(configDir, 'tau', 'logs')
 const logFile = path.join(logsDir, `pi-${new Date().toISOString().slice(0, 10)}.log`)
 const logEntry = `${new Date().toISOString()} start cmd=pi settings=${fallbackPath} args=${JSON.stringify(args)}\n`
-const banner = process.env.TAU_BANNER || 'Tau'
-
-if (process.env.TAU_BANNER !== '0') {
-  console.log(`[${banner}] starting`)
-}
 
 try {
   fs.mkdirSync(logsDir, { recursive: true })
