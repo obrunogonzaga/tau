@@ -70,6 +70,7 @@ tau ship --profile=work "force Copilot"
 | `tau ext team "task"` | Persona selector stack. |
 | `tau ext chain "task"` | Chain/persona stack. |
 | `tau ext vibe "task"` | Banner + theme cycler + status/tool footers. |
+| `tau ext cc "task"` | Claude Code layout: `tau-cc` theme + welcome header + rounded input + star spinner + bullet tools. |
 | `tau ext orchestrate "task"` | Subagents + replay + cross-agent loader. |
 
 NPM shortcuts:
@@ -79,6 +80,7 @@ npm run ext:banner
 npm run ext:minimal
 npm run ext:focus
 npm run ext:vibe
+npm run ext:cc
 npm run ext:orchestrate
 npm run ext:safe
 npm run ext:team
@@ -97,11 +99,27 @@ npm run ext:smoke
 | `/theme tau-dark` | Daily Tau dark theme. |
 | `/theme tau-focus` | Lower-distraction Tau theme. |
 | `/theme tau-alert` | Strong contrast for safety/debug work. |
+| `/theme tau-cc` | Claude Code-style calm palette with teal accent. |
 
 Theme shortcuts:
 
 - `Ctrl+Shift+T`: next theme.
 - `Ctrl+Alt+T`: previous theme.
+
+### Claude Code Layout (`cc`)
+
+`tau ext cc` recreates Claude Code's layout with Tau's identity:
+
+- `✻ Welcome to Tau` welcome box with cwd and model.
+- Rounded input border with model and context labels.
+- `✻ Cogitating…` star spinner with rotating status verbs.
+- `●` tool-call bullets with `⎿` indented output.
+- `? for shortcuts` hint line.
+
+| Command | Description |
+| --- | --- |
+| `/spinner` | Reapply the Tau star spinner. |
+| `/spinner reset` | Restore Pi's default spinner. |
 
 ### Personas
 

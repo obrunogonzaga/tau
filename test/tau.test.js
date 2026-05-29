@@ -226,6 +226,7 @@ test('tau_configFile_containsProfilesAndAliases', () => {
   ])
   assert.deepEqual(Object.keys(config.extensionPresets).sort(), [
     'banner',
+    'cc',
     'chain',
     'damage',
     'damage-continue',
@@ -504,6 +505,76 @@ test('tau_extVibe_loadsPersonalityStack', () => {
     extensionPath('tool-counter-footer.ts'),
     'make it visible',
   ]))
+})
+
+test('tau_extCc_expandsClaudeStylePreset', () => {
+  const record = runWrapper(['ext', 'cc', 'make it claude'])
+
+  assert.deepEqual(record.args, withSystemPrompt([
+    '--provider',
+    'openai-codex',
+    '--model',
+    'gpt-5.3-codex-spark',
+    '--thinking',
+    'low',
+    '-e',
+    extensionPath('theme-cycler.ts'),
+    '-e',
+    extensionPath('cc-header.ts'),
+    '-e',
+    extensionPath('cc-editor.ts'),
+    '-e',
+    extensionPath('cc-spinner.ts'),
+    '-e',
+    extensionPath('cc-tools.ts'),
+    'make it claude',
+  ]))
+})
+
+test('tau_ccExtensions_registerLayoutContracts', () => {
+  const header = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-header.ts'), 'utf8')
+  const editor = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-editor.ts'), 'utf8')
+  const spinner = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-spinner.ts'), 'utf8')
+  const tools = fs.readFileSync(path.join(repoDir, 'extensions', 'cc-tools.ts'), 'utf8')
+
+  assert.match(header, /setHeader\(/)
+  assert.match(header, /Welcome to Tau/)
+  assert.match(header, /CC_THEME = 'tau-cc'/)
+  assert.match(header, /setTheme\(CC_THEME\)/)
+  assert.match(editor, /setEditorComponent\(/)
+  assert.match(editor, /╭/)
+  assert.match(editor, /╰/)
+  assert.match(editor, /\? for shortcuts/)
+  assert.match(editor, /registerCommand\('shortcuts'/)
+  assert.match(editor, /this\.getText\(\)\.length === 0/)
+  assert.match(editor, /ctx\.ui\.custom/)
+  assert.match(spinner, /setWorkingIndicator\(/)
+  assert.match(spinner, /registerCommand\('spinner'/)
+  assert.match(spinner, /✻/)
+  assert.match(tools, /renderShell: 'self'/)
+  assert.match(tools, /'●'/)
+  assert.match(tools, /'⎿'/)
+  assert.match(tools, /registerTool\(/)
+})
+
+test('tau_ccTheme_isDarkReadableWithTealAccent', () => {
+  const theme = JSON.parse(fs.readFileSync(path.join(repoDir, '.pi', 'themes', 'tau-cc.json'), 'utf8'))
+
+  assert.equal(theme.name, 'tau-cc')
+  assert.match(theme.colors.text, /^#/)
+  assert.match(theme.colors.accent, /^#/)
+  assert.notEqual(theme.colors.text.toLowerCase(), '#000000')
+})
+
+test('tau_ccDocs_documentPresetAndRecipe', () => {
+  const readme = fs.readFileSync(path.join(repoDir, 'README.md'), 'utf8')
+  const commands = fs.readFileSync(path.join(repoDir, 'docs', 'COMMANDS.md'), 'utf8')
+  const packageJson = JSON.parse(fs.readFileSync(path.join(repoDir, 'package.json'), 'utf8'))
+
+  assert.match(readme, /tau ext cc/)
+  assert.match(commands, /tau ext cc/)
+  assert.match(commands, /\/theme tau-cc/)
+  assert.equal(packageJson.scripts['ext:cc'], 'tau ext cc')
 })
 
 test('tau_orchestrationExtensions_registerRequiredCommands', () => {
