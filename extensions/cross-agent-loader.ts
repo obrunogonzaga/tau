@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent'
+import { isBlockedPath, isSafeCrossAgentFile, isSensitivePath } from './lib/safety.js'
 
 type Discovery = {
   kind: string
@@ -10,19 +11,9 @@ type Discovery = {
 }
 
 const AGENT_DIRS = ['.claude', '.gemini', '.codex', '.pi']
-const SECRET_FILE_PATTERN = /(^|\/)(\.env|auth|token|secret|credentials|key|history|sessions?|logs?|cache)(\.|\/|$)/i
-const SAFE_EXTENSIONS = new Set(['.md', '.markdown', '.yaml', '.yml', '.json'])
-const BLOCKED_DIRS = ['/node_modules/', '/.git/', '/.ssh/', '/.cache/', '/Library/', '/AppData/']
 const DEFAULT_LIMIT = 20
 
 const uniqueRoots = (cwd: string) => [...new Set([cwd, os.homedir()])]
-
-const isSafeFile = (filePath: string) => {
-  if (SECRET_FILE_PATTERN.test(filePath)) return false
-  if (BLOCKED_DIRS.some((segment) => filePath.includes(segment))) return false
-
-  return SAFE_EXTENSIONS.has(path.extname(filePath))
-}
 
 const kindForPath = (filePath: string) => {
   if (filePath.includes('/commands/')) return 'command'
@@ -39,11 +30,11 @@ const walk = (dir: string, limit = 120, depth = 8): string[] => {
   const found: string[] = []
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fullPath = path.join(dir, entry.name)
-    if (BLOCKED_DIRS.some((segment) => fullPath.includes(segment))) continue
-    if (SECRET_FILE_PATTERN.test(fullPath)) continue
+    if (isBlockedPath(fullPath)) continue
+    if (isSensitivePath(fullPath)) continue
 
     if (entry.isDirectory()) found.push(...walk(fullPath, limit - found.length, depth - 1))
-    if (entry.isFile() && isSafeFile(fullPath)) found.push(fullPath)
+    if (entry.isFile() && isSafeCrossAgentFile(fullPath)) found.push(fullPath)
     if (found.length >= limit) break
   }
 

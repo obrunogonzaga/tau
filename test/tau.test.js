@@ -722,6 +722,7 @@ test('tau_ccDocs_documentPresetAndRecipe', () => {
 test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
   const subagentStore = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
+  const safety = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'safety.js'), 'utf8')
   const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
   const loader = fs.readFileSync(path.join(repoDir, 'extensions', 'cross-agent-loader.ts'), 'utf8')
 
@@ -737,16 +738,16 @@ test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   assert.match(replay, /message\.role === 'assistant'/)
   assert.match(replay, /tool_execution_start/)
   assert.match(replay, /next|prev|all/)
-  assert.match(replay, /SENSITIVE_KEY/)
-  assert.match(replay, /LEAKY_PATTERN/)
+  assert.match(safety, /SENSITIVE_KEY/)
+  assert.match(safety, /SECRET_TEXT_PATTERN/)
   assert.match(replay, /redactValue\(event\.args\)/)
   assert.match(loader, /registerCommand\('xload'/)
   assert.match(loader, /\.claude/)
   assert.match(loader, /\.gemini/)
   assert.match(loader, /\.codex/)
   assert.match(loader, /\.pi/)
-  assert.match(loader, /SECRET_FILE_PATTERN/)
-  assert.match(loader, /BLOCKED_DIRS/)
+  assert.match(safety, /SECRET_FILE_PATTERN/)
+  assert.match(safety, /BLOCKED_DIRS/)
   assert.match(loader, /toLowerCase\(\)\.includes\(filter\)/)
 })
 
