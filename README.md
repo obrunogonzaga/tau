@@ -56,6 +56,8 @@ npm run tau -- fast "summarize this repo"
 | `tau ext orchestrate "task"` | Subagents, replay, cross-agent loader. |
 
 Full command reference: [docs/COMMANDS.md](docs/COMMANDS.md).
+Project vocabulary: [CONTEXT.md](CONTEXT.md).
+Architecture notes: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Profiles
 
@@ -147,13 +149,17 @@ Theme shortcuts in `vibe`:
 | --- | --- |
 | `bin/tau.js` | Wrapper/router that resolves profiles, aliases, prompts, auth, and sessions. |
 | `config/tau.config.json` | Profiles, aliases, provider key checks, extension presets. |
+| `src/` | Shared wrapper modules for config and arg resolution. |
 | `extensions/` | Curated Tau extension entrypoints. |
+| `extensions/lib/` | Shared extension modules for safety, subagents, brand, and formatting. |
 | `.pi/agents/` | Specialist personas, teams, chains. |
 | `.pi/themes/` | Tau dark, focus, and alert TUI themes. |
 | `.pi/research/` | Approved research notes before implementation. |
 | `.pi/damage-control-rules.yaml` | Blocked command and sensitive path regexes. |
 | `prompts/system-prompt.md` | Default Tau system prompt. |
 | `test/tau.test.js` | Node regression tests for wrapper and extension contracts. |
+| `CONTEXT.md` | Domain vocabulary and design rules for future agents. |
+| `docs/ARCHITECTURE.md` | Wrapper, module, extension, and test architecture notes. |
 | `docs/` | Command reference and visual docs. |
 
 ## Configuration
