@@ -3,6 +3,8 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import { spawn, spawnSync } from 'node:child_process'
+import { appendSystemPrompt, resolveArgs, splitModelId } from '../src/args.js'
+import { loadConfig, localConfigPath } from '../src/config.js'
 
 const rawArgs = process.argv.slice(2)
 
@@ -16,146 +18,6 @@ const resolveConfigPath = () => {
   return path.isAbsolute(configPath) ? configPath : path.resolve(process.cwd(), configPath)
 }
 
-const readJson = (filePath) => JSON.parse(fs.readFileSync(filePath, 'utf8'))
-
-const splitModelId = (modelId) => {
-  const slash = modelId.indexOf('/')
-
-  return { provider: modelId.slice(0, slash), model: modelId.slice(slash + 1) }
-}
-
-const modelPattern = (modelConfig) => `${modelConfig.id}:${modelConfig.thinking}`
-
-const profileBaseArgs = (modelConfig) => {
-  if (!modelConfig.id) return []
-
-  const { model, provider } = splitModelId(modelConfig.id)
-  return ['--provider', provider, '--model', model, '--thinking', modelConfig.thinking]
-}
-
-const hasText = (value) => typeof value === 'string' && value.length > 0
-
-const validateProfile = (name, profile, profiles) => {
-  if (!profile || typeof profile !== 'object') {
-    throw new Error(`Invalid config: profile ${name} must be an object`)
-  }
-  // A profile with no id is a passthrough: tau forwards no provider/model and
-  // pi uses its own configured default/login. Useful as a portable default.
-  if (profile.id !== undefined) {
-    if (!hasText(profile.id) || !profile.id.includes('/')) {
-      throw new Error(`Invalid config: profile ${name} id must be <provider>/<model>`)
-    }
-    if (!hasText(profile.thinking)) {
-      throw new Error(`Invalid config: profile ${name} requires thinking`)
-    }
-  }
-  if (profile.models?.some((modelName) => !profiles[modelName])) {
-    throw new Error(`Invalid config: profile ${name} has unknown model reference`)
-  }
-}
-
-const validateAlias = (name, alias, profiles) => {
-  if (!alias || !profiles[alias.profile] || !Array.isArray(alias.extras)) {
-    throw new Error(`Invalid config: alias ${name} requires profile and extras`)
-  }
-}
-
-const validateExtensionPreset = (name, preset, profiles) => {
-  if (!preset || !profiles[preset.profile] || !Array.isArray(preset.extensions)) {
-    throw new Error(`Invalid config: extension preset ${name} requires profile and extensions`)
-  }
-  if (preset.extensions.some((extension) => !hasText(extension))) {
-    throw new Error(`Invalid config: extension preset ${name} has invalid extension`)
-  }
-  if (preset.prompt !== undefined && !hasText(preset.prompt)) {
-    throw new Error(`Invalid config: extension preset ${name} has invalid prompt`)
-  }
-  if (preset.themes !== undefined && (!Array.isArray(preset.themes) || preset.themes.some((theme) => !hasText(theme)))) {
-    throw new Error(`Invalid config: extension preset ${name} has invalid themes`)
-  }
-  if (preset.brand !== undefined && !hasText(preset.brand)) {
-    throw new Error(`Invalid config: extension preset ${name} has invalid brand`)
-  }
-}
-
-const validateConfig = (config) => {
-  if (!config?.profiles || !config?.aliases || !config?.extensionPresets || !hasText(config.defaultProfile)) {
-    throw new Error('Invalid config: profiles, aliases, extensionPresets, and defaultProfile are required')
-  }
-  if (!config.profiles[config.defaultProfile]) throw new Error('Invalid config: defaultProfile unknown')
-  Object.entries(config.profiles).forEach(([name, profile]) => validateProfile(name, profile, config.profiles))
-  Object.entries(config.aliases).forEach(([name, alias]) => validateAlias(name, alias, config.profiles))
-  Object.entries(config.extensionPresets).forEach(([name, preset]) =>
-    validateExtensionPreset(name, preset, config.profiles),
-  )
-}
-
-const localConfigPath = () =>
-  process.env.TAU_LOCAL_CONFIG || path.join(os.homedir(), '.pi', 'tau', 'config.local.json')
-
-const isPlainObject = (value) => typeof value === 'object' && value !== null && !Array.isArray(value)
-
-const deepMerge = (base, overlay) => {
-  if (!isPlainObject(base) || !isPlainObject(overlay)) return overlay
-  const merged = { ...base }
-  for (const [key, value] of Object.entries(overlay)) {
-    merged[key] = isPlainObject(value) && isPlainObject(base[key]) ? deepMerge(base[key], value) : value
-  }
-  return merged
-}
-
-const loadConfig = () => {
-  try {
-    let config = readJson(resolveConfigPath())
-    const overlayPath = localConfigPath()
-    if (fs.existsSync(overlayPath)) config = deepMerge(config, readJson(overlayPath))
-    validateConfig(config)
-    return config
-  } catch (error) {
-    if (error.message.startsWith('Invalid config')) throw error
-    throw new Error(`Invalid config: ${error.message}`)
-  }
-}
-
-const modelCyclingArgs = (config, profileConfig) => {
-  const modelNames = profileConfig.models ?? []
-  if (modelNames.length === 0) return []
-  return ['--models', modelNames.map((name) => modelPattern(config.profiles[name])).join(',')]
-}
-
-const profileArgs = (config, profileName) => {
-  const profileConfig = config.profiles[profileName]
-  return [...profileBaseArgs(profileConfig), ...modelCyclingArgs(config, profileConfig)]
-}
-
-const extensionArgs = (extensions) => extensions.flatMap((extension) => ['-e', resolveRepoPath('extensions', extension)])
-
-const themeArgs = (themes) => themes.flatMap((theme) => ['--theme', resolveRepoPath('.pi', 'themes', `${theme}.json`)])
-
-const extractProfileAt = (config, args, profileIndex) => {
-  const profileArg = args[profileIndex]
-  const hasEqualsValue = profileArg.startsWith('--profile=')
-  const profileName = hasEqualsValue ? profileArg.slice('--profile='.length) : args[profileIndex + 1]
-  if (!profileName) throw new Error('Missing value for --profile')
-  if (!config.profiles[profileName]) throw new Error(`Unknown profile: ${profileName}`)
-
-  const cleanArgs = args.filter((_, index) => {
-    if (index === profileIndex) return false
-    return hasEqualsValue || index !== profileIndex + 1
-  })
-
-  return { args: cleanArgs, profileName }
-}
-
-const extractProfile = (config, args) => {
-  if (args[0] === '--profile' || args[0]?.startsWith('--profile=')) return extractProfileAt(config, args, 0)
-  if (config.aliases[args[0]] && (args[1] === '--profile' || args[1]?.startsWith('--profile='))) {
-    return extractProfileAt(config, args, 1)
-  }
-
-  return { args, profileName: null }
-}
-
 const resolvePromptPath = () => resolveRepoPath('prompts', 'system-prompt.md')
 
 const shouldSkipAuthCheck = () => {
@@ -166,66 +28,6 @@ const shouldSkipAuthCheck = () => {
 const shouldAppendPrompt = () => process.env.TAU_NO_PROMPT !== '1'
 
 const readPrompt = () => fs.readFileSync(resolvePromptPath(), 'utf8').trim()
-
-const appendSystemPrompt = (args, promptText) => ['--append-system-prompt', promptText, ...args]
-
-const resolveArgs = (config, rawInputArgs) => {
-  const { args: inputArgs, profileName } = extractProfile(config, rawInputArgs)
-  const [firstArg, ...restArgs] = inputArgs
-
-  if (!firstArg) {
-    const selectedProfile = profileName ?? config.defaultProfile
-
-    return {
-      args: [...profileArgs(config, selectedProfile), ...extensionArgs(['tau-banner.ts'])],
-      profileName: selectedProfile,
-    }
-  }
-
-  if (firstArg === 'ext') {
-    const [presetName, ...presetRestArgs] = restArgs
-    const preset = config.extensionPresets[presetName]
-    if (!preset) throw new Error(`Unknown extension preset: ${presetName ?? ''}`)
-    const selectedProfile = profileName ?? preset.profile
-    const promptArgs = shouldAppendPrompt() && preset.prompt ? ['--append-system-prompt', preset.prompt] : []
-
-    return {
-      args: [
-        ...profileArgs(config, selectedProfile),
-        ...themeArgs(preset.themes ?? []),
-        ...extensionArgs(preset.extensions),
-        ...promptArgs,
-        ...presetRestArgs,
-      ],
-      profileName: selectedProfile,
-      brand: preset.brand,
-    }
-  }
-
-  if (config.aliases[firstArg]) {
-    const alias = config.aliases[firstArg]
-    const selectedProfile = profileName ?? alias.profile
-    const promptArgs = shouldAppendPrompt() && alias.prompt ? ['--append-system-prompt', alias.prompt] : []
-
-    return {
-      args: [...profileArgs(config, selectedProfile), ...alias.extras, ...promptArgs, ...restArgs],
-      profileName: selectedProfile,
-    }
-  }
-
-  const resolvedProfileName = profileName ?? firstArg
-  if (!config.profiles[resolvedProfileName]) {
-    return {
-      args: [...profileArgs(config, config.defaultProfile), firstArg, ...restArgs].filter((arg) => arg !== undefined),
-      profileName: config.defaultProfile,
-    }
-  }
-
-  return {
-    args: [...profileArgs(config, resolvedProfileName), ...(profileName ? inputArgs : restArgs)],
-    profileName: resolvedProfileName,
-  }
-}
 
 const HOME_DIR = os.homedir()
 const defaultSettingsPath = path.join(HOME_DIR, '.pi', 'agent', 'settings.json')
@@ -348,9 +150,12 @@ let selectedProfileName
 let selectedBrand
 
 try {
-  config = loadConfig()
+  config = loadConfig(resolveConfigPath())
   if (rawArgs[0] === 'doctor') process.exit(runDoctor(config))
-  const resolved = resolveArgs(config, rawArgs)
+  const resolved = resolveArgs(config, rawArgs, {
+    repoDir: resolveRepoPath(),
+    shouldAppendPrompt: shouldAppendPrompt(),
+  })
   args = resolved.args
   selectedProfileName = resolved.profileName
   selectedBrand = resolved.brand

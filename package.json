@@ -25,9 +25,12 @@
     "changeset": "changeset",
     "release:version": "changeset version",
     "release:publish": "changeset publish",
-    "test": "node --test"
+    "test": "node --test",
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.31.0"
+    "@changesets/cli": "^2.31.0",
+    "@types/node": "^25.9.1",
+    "typescript": "^6.0.3"
   }
 }

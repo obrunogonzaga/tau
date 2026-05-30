@@ -1,5 +1,6 @@
 import type { ExtensionAPI } from '@earendil-works/pi-coding-agent'
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
+import { redactValue } from './lib/safety.js'
 
 type ReplayItem = {
   body: string
@@ -7,26 +8,6 @@ type ReplayItem = {
 }
 
 const REPLAY_KEY = 'tau-replay-tool-call'
-const SENSITIVE_KEY = /(token|secret|password|auth|credential|api[_-]?key|access[_-]?token|bearer)/i
-const LEAKY_PATTERN = /(sk\-|pk_live_|ghp_|gho_)[A-Za-z0-9_+-]{16,}/
-
-const redactValue = (value: unknown, key = ''): unknown => {
-  if (typeof value === 'string') {
-    if (SENSITIVE_KEY.test(key) || LEAKY_PATTERN.test(value)) return '[redacted]'
-    return value
-  }
-
-  if (Array.isArray(value)) return value.map((entry) => redactValue(entry))
-  if (value && typeof value === 'object') {
-    const out: Record<string, unknown> = {}
-    for (const [entryKey, entryValue] of Object.entries(value as Record<string, unknown>)) {
-      out[entryKey] = SENSITIVE_KEY.test(entryKey) ? '[redacted]' : redactValue(entryValue, entryKey)
-    }
-    return out
-  }
-
-  return value
-}
 
 const textFromContent = (content: unknown): string => {
   if (typeof content === 'string') return content

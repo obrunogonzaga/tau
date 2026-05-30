@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import type { ExtensionAPI, ToolCallEvent } from '@earendil-works/pi-coding-agent'
+import { isSensitivePath as hasSensitivePath } from './lib/safety.js'
 
 type Rules = {
   destructiveCommands: RegExp[]
@@ -75,12 +76,6 @@ const eventPath = (event: ToolCallEvent) => {
   return typeof value === 'string' ? value : ''
 }
 
-const isSensitivePath = (rules: Rules, value: string) => {
-  if (!value) return false
-
-  return rules.sensitivePaths.some((rule) => rule.test(value))
-}
-
 const isDestructiveCommand = (rules: Rules, command: string) =>
   rules.destructiveCommands.some((rule) => rule.test(command))
 
@@ -100,7 +95,7 @@ export default function damageControl(pi: ExtensionAPI) {
 
     if (['read', 'ls', 'grep', 'find', 'edit', 'write'].includes(event.toolName)) {
       const targetPath = eventPath(event)
-      if (isSensitivePath(rules, targetPath)) return block(`blocked sensitive path: ${targetPath}`)
+      if (hasSensitivePath(targetPath, rules.sensitivePaths)) return block(`blocked sensitive path: ${targetPath}`)
     }
   })
 }
