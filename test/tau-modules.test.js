@@ -91,3 +91,33 @@ test('deepMerge_nestedObjects_keepsBaseFields', () => {
 test('validateConfig_unknownDefaultProfile_throws', () => {
   assert.throws(() => validateConfig({ ...config, defaultProfile: 'missing' }), /defaultProfile unknown/)
 })
+
+test('validateConfig_missingExtensionFile_throws', () => {
+  const brokenConfig = deepMerge(config, {
+    extensionPresets: {
+      safe: {
+        extensions: ['missing-extension.ts'],
+      },
+    },
+  })
+
+  assert.throws(
+    () => validateConfig(brokenConfig, { repoDir }),
+    /extension preset safe missing extension file missing-extension\.ts/,
+  )
+})
+
+test('validateConfig_missingThemeFile_throws', () => {
+  const brokenConfig = deepMerge(config, {
+    extensionPresets: {
+      safe: {
+        themes: ['missing-theme'],
+      },
+    },
+  })
+
+  assert.throws(
+    () => validateConfig(brokenConfig, { repoDir }),
+    /extension preset safe missing theme file missing-theme/,
+  )
+})

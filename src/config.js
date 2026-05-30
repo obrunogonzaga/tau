@@ -3,6 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 
 const hasText = (value) => typeof value === 'string' && value.length > 0
+const defaultRepoDir = path.resolve(import.meta.dirname, '..')
 
 const validateProfile = (name, profile, profiles) => {
   if (!profile || typeof profile !== 'object') {
@@ -27,12 +28,22 @@ const validateAlias = (name, alias, profiles) => {
   }
 }
 
-const validateExtensionPreset = (name, preset, profiles) => {
+const assertFileExists = (filePath, message) => {
+  if (!fs.existsSync(filePath)) throw new Error(message)
+}
+
+const validateExtensionPreset = (name, preset, profiles, repoDir) => {
   if (!preset || !profiles[preset.profile] || !Array.isArray(preset.extensions)) {
     throw new Error(`Invalid config: extension preset ${name} requires profile and extensions`)
   }
   if (preset.extensions.some((extension) => !hasText(extension))) {
     throw new Error(`Invalid config: extension preset ${name} has invalid extension`)
+  }
+  for (const extension of preset.extensions) {
+    assertFileExists(
+      path.resolve(repoDir, 'extensions', extension),
+      `Invalid config: extension preset ${name} missing extension file ${extension}`,
+    )
   }
   if (preset.prompt !== undefined && !hasText(preset.prompt)) {
     throw new Error(`Invalid config: extension preset ${name} has invalid prompt`)
@@ -40,12 +51,18 @@ const validateExtensionPreset = (name, preset, profiles) => {
   if (preset.themes !== undefined && (!Array.isArray(preset.themes) || preset.themes.some((theme) => !hasText(theme)))) {
     throw new Error(`Invalid config: extension preset ${name} has invalid themes`)
   }
+  for (const theme of preset.themes ?? []) {
+    assertFileExists(
+      path.resolve(repoDir, '.pi', 'themes', `${theme}.json`),
+      `Invalid config: extension preset ${name} missing theme file ${theme}`,
+    )
+  }
   if (preset.brand !== undefined && !hasText(preset.brand)) {
     throw new Error(`Invalid config: extension preset ${name} has invalid brand`)
   }
 }
 
-export const validateConfig = (config) => {
+export const validateConfig = (config, { repoDir = defaultRepoDir } = {}) => {
   if (!config?.profiles || !config?.aliases || !config?.extensionPresets || !hasText(config.defaultProfile)) {
     throw new Error('Invalid config: profiles, aliases, extensionPresets, and defaultProfile are required')
   }
@@ -53,7 +70,7 @@ export const validateConfig = (config) => {
   Object.entries(config.profiles).forEach(([name, profile]) => validateProfile(name, profile, config.profiles))
   Object.entries(config.aliases).forEach(([name, alias]) => validateAlias(name, alias, config.profiles))
   Object.entries(config.extensionPresets).forEach(([name, preset]) =>
-    validateExtensionPreset(name, preset, config.profiles),
+    validateExtensionPreset(name, preset, config.profiles, repoDir),
   )
 }
 
@@ -78,7 +95,7 @@ export const loadConfig = (configPath) => {
     let config = readJson(configPath)
     const overlayPath = localConfigPath()
     if (fs.existsSync(overlayPath)) config = deepMerge(config, readJson(overlayPath))
-    validateConfig(config)
+    validateConfig(config, { repoDir: path.resolve(path.dirname(configPath), '..') })
     return config
   } catch (error) {
     if (error.message.startsWith('Invalid config')) throw error
