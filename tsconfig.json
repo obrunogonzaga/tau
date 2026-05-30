@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "allowJs": true,
+    "checkJs": false,
+    "exactOptionalPropertyTypes": false,
+    "lib": ["ES2024"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strict": false,
+    "target": "ES2024",
+    "types": ["node"]
+  },
+  "include": ["extensions/**/*.ts", "types/**/*.d.ts"]
+}
