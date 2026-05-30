@@ -721,14 +721,16 @@ test('tau_ccDocs_documentPresetAndRecipe', () => {
 
 test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const subagentStore = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
   const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
   const loader = fs.readFileSync(path.join(repoDir, 'extensions', 'cross-agent-loader.ts'), 'utf8')
 
   assert.match(subagent, /registerCommand\('sub'/)
   assert.match(subagent, /tools:\s*\[\s*'read',\s*'grep',\s*'find',\s*'ls'\s*\]/)
-  assert.match(subagent, /status:\s*'running'/)
-  assert.match(subagent, /status:\s*'done'/)
-  assert.match(subagent, /status:\s*'error'/)
+  assert.match(subagentStore, /status:\s*'running'/)
+  assert.match(subagentStore, /setStatus\(job, 'done'\)/)
+  assert.match(subagentStore, /setStatus\(job, 'error'\)/)
+  assert.match(subagentStore, /setStatus\(job, 'cancelled'\)/)
   assert.match(subagent, /sendMessage/)
   assert.match(replay, /registerCommand\('replay'/)
   assert.match(replay, /message\.role === 'user'/)
@@ -827,9 +829,8 @@ test('tau_replay_filtersThinkingBlocks', () => {
 })
 
 test('tau_orchestrateM11_formatsSubagentStatusCards', () => {
-  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
 
-  assert.match(subagent, /type SubagentStatus = 'running' \| 'done' \| 'error' \| 'cancelled'/)
   assert.match(subagent, /renderStatusCard/)
   assert.match(subagent, /promptPreview/)
   assert.match(subagent, /lastActivity/)
@@ -837,7 +838,7 @@ test('tau_orchestrateM11_formatsSubagentStatusCards', () => {
 })
 
 test('tau_orchestrateM11_showsPromptElapsedAndSummary', () => {
-  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
 
   assert.match(subagent, /originalPrompt/)
   assert.match(subagent, /startedAt/)
@@ -848,17 +849,18 @@ test('tau_orchestrateM11_showsPromptElapsedAndSummary', () => {
 
 test('tau_orchestrateM11_registersSubagentNavigationCommands', () => {
   const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const subagentStore = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
 
   assert.match(subagent, /registerCommand\('sub list'/)
   assert.match(subagent, /registerCommand\('sub show'/)
   assert.match(subagent, /registerCommand\('sub open'/)
-  assert.match(subagent, /renderOpenFallback/)
+  assert.match(subagent, /registerCommand\('sub cancel'/)
+  assert.match(subagentStore, /detail fallback/)
 })
 
 test('tau_orchestrateM11_recordsBoundedTimelineWithoutThinking', () => {
-  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'subagent-mode.ts'), 'utf8')
+  const subagent = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
 
-  assert.match(subagent, /type SubagentEvent/)
   assert.match(subagent, /recordEvent/)
   assert.match(subagent, /assistant/)
   assert.match(subagent, /tool/)
@@ -867,6 +869,7 @@ test('tau_orchestrateM11_recordsBoundedTimelineWithoutThinking', () => {
   assert.match(subagent, /thinking/)
   assert.match(subagent, /truncateText/)
   assert.match(subagent, /MAX_EVENT_TEXT/)
+  assert.match(subagent, /maxResultText/)
 })
 
 test('tau_personaSelector_registersSystemCommandAndStatus', () => {
