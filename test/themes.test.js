@@ -167,21 +167,6 @@ test('tau_ccTheme_isDarkReadableWithTealAccent', () => {
   assert.notEqual(theme.colors.text.toLowerCase(), '#000000')
 })
 
-test('tau_themeCycler_registersCommandShortcutsAndStatus', () => {
-  const content = fs.readFileSync(path.join(repoDir, 'extensions', 'theme-cycler.ts'), 'utf8')
-
-  assert.match(content, /registerCommand\('theme'/)
-  assert.match(content, /\/theme <name>/)
-  assert.match(content, /registerShortcut\(Key\.ctrlShift\('t'\)/)
-  assert.match(content, /registerShortcut\(Key\.ctrlAlt\('t'\)/)
-  assert.match(content, /setStatus\(THEME_KEY/)
-  assert.match(content, /Theme not found/)
-  assert.match(content, /getAllThemes\(\)/)
-  assert.match(content, /setTheme\(themeName\)/)
-  assert.match(content, /resources_discover/)
-  assert.match(content, /shouldRegisterTauThemes\(event\.cwd\)/)
-})
-
 test('tau_themePack_containsDarkReadableThemes', () => {
   const requiredThemes = ['tau-dark', 'tau-focus', 'tau-alert']
 

@@ -1,7 +1,11 @@
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent'
-import { Key } from '@earendil-works/pi-tui'
+
+type ShortcutKey = {
+  ctrlAlt(key: string): unknown
+  ctrlShift(key: string): unknown
+}
 
 const THEME_KEY = 'tau-theme'
 const themeDir = join(dirname(fileURLToPath(import.meta.url)), '..', '.pi', 'themes')
@@ -11,6 +15,13 @@ const themePath = (name: string) => join(themeDir, `${name}.json`)
 const projectThemeDir = (cwd: string) => resolve(cwd, '.pi', 'themes')
 const shouldRegisterTauThemes = (cwd: string) => resolve(themeDir) !== projectThemeDir(cwd)
 const cleanThemeName = (value: string) => value.trim()
+const fallbackKey: ShortcutKey = {
+  ctrlAlt: (key) => `ctrl-alt-${key}`,
+  ctrlShift: (key) => `ctrl-shift-${key}`,
+}
+const Key: ShortcutKey = await import('@earendil-works/pi-tui')
+  .then((runtime) => runtime.Key ?? fallbackKey)
+  .catch(() => fallbackKey)
 
 const availableThemeNames = (ctx: ExtensionContext) => ctx.ui.getAllThemes().map((theme) => theme.name)
 

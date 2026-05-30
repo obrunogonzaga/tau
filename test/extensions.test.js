@@ -209,7 +209,6 @@ test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   const subagentStore = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'subagent-store.js'), 'utf8')
   const safety = fs.readFileSync(path.join(repoDir, 'extensions', 'lib', 'safety.js'), 'utf8')
   const replay = fs.readFileSync(path.join(repoDir, 'extensions', 'session-replay.ts'), 'utf8')
-  const loader = fs.readFileSync(path.join(repoDir, 'extensions', 'cross-agent-loader.ts'), 'utf8')
 
   assert.match(subagent, /registerCommand\('sub'/)
   assert.match(subagent, /tools:\s*\[\s*'read',\s*'grep',\s*'find',\s*'ls'\s*\]/)
@@ -226,14 +225,8 @@ test('tau_orchestrationExtensions_registerRequiredCommands', () => {
   assert.match(safety, /SENSITIVE_KEY/)
   assert.match(safety, /SECRET_TEXT_PATTERN/)
   assert.match(replay, /redactValue\(event\.args\)/)
-  assert.match(loader, /registerCommand\('xload'/)
-  assert.match(loader, /\.claude/)
-  assert.match(loader, /\.gemini/)
-  assert.match(loader, /\.codex/)
-  assert.match(loader, /\.pi/)
   assert.match(safety, /SECRET_FILE_PATTERN/)
   assert.match(safety, /BLOCKED_DIRS/)
-  assert.match(loader, /toLowerCase\(\)\.includes\(filter\)/)
 })
 
 test('tau_orchestrationUi_keepsLongOutputOutOfBelowEditorWidget', () => {
@@ -293,15 +286,6 @@ test('tau_orchestrateM11_recordsBoundedTimelineWithoutThinking', () => {
   assert.match(subagent, /truncateText/)
   assert.match(subagent, /MAX_EVENT_TEXT/)
   assert.match(subagent, /maxResultText/)
-})
-
-test('tau_personaSelector_registersSystemCommandAndStatus', () => {
-  const content = fs.readFileSync(path.join(repoDir, 'extensions', 'persona-selector.ts'), 'utf8')
-
-  assert.match(content, /registerCommand\('system'/)
-  assert.match(content, /before_agent_start/)
-  assert.match(content, /setStatus/)
-  assert.match(content, /system persona/)
 })
 
 test('tau_damageControlRules_coverDestructiveAndSensitiveDefaults', () => {

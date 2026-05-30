@@ -12,10 +12,13 @@ const PURPOSE_KEY = 'tau-purpose'
 const cleanPurpose = (value: string | undefined) => value?.replace(/\s+/g, ' ').trim() ?? ''
 
 class PurposeWidget implements Component {
-  constructor(
-    private readonly getPurpose: () => string,
-    private readonly theme: Theme,
-  ) {}
+  private readonly getPurpose: () => string
+  private readonly theme: Theme
+
+  constructor(getPurpose: () => string, theme: Theme) {
+    this.getPurpose = getPurpose
+    this.theme = theme
+  }
 
   render(): string[] {
     const purpose = this.getPurpose()
