@@ -1,4 +1,4 @@
-import type { ExtensionAPI } from '@earendil-works/pi-coding-agent'
+import type { ExtensionAPI, SessionEntry } from '@earendil-works/pi-coding-agent'
 import type { AgentMessage } from '@earendil-works/pi-agent-core'
 import { redactValue } from './lib/safety.js'
 
@@ -36,18 +36,22 @@ const messageItem = (message: AgentMessage): ReplayItem | null => {
   return null
 }
 
-const entryItem = (entry: ReturnType<ExtensionAPI['appendEntry']> | any): ReplayItem | null => {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null
+
+const entryItem = (entry: SessionEntry): ReplayItem | null => {
   if (entry.type === 'message') return messageItem(entry.message)
   if (entry.type === 'custom' && entry.customType === REPLAY_KEY) {
-    const safeArgs = redactValue(entry.data.args ?? {})
-    return { title: 'tool', body: `${entry.data.toolName} ${JSON.stringify(safeArgs)}` }
+    const data = isRecord(entry.data) ? entry.data : {}
+    const safeArgs = redactValue(data.args ?? {})
+    return { title: 'tool', body: `${String(data.toolName ?? 'tool')} ${JSON.stringify(safeArgs)}` }
   }
   if (entry.type === 'custom_message') return { title: entry.customType, body: textFromContent(entry.content) }
 
   return null
 }
 
-const buildTimeline = (entries: any[]) => entries.map(entryItem).filter(Boolean) as ReplayItem[]
+const buildTimeline = (entries: SessionEntry[]) => entries.map(entryItem).filter(Boolean) as ReplayItem[]
 
 const renderTimeline = (timeline: ReplayItem[], index: number, all: boolean) => {
   if (timeline.length === 0) return 'replay empty'

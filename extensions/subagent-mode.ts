@@ -3,6 +3,7 @@ import { createSubagentStore } from './lib/subagent-store.js'
 
 const SUBAGENT_KEY = 'tau-subagents'
 const USAGE = 'usage: /sub <task> | /sub list | /sub show <id> | /sub open <id> | /sub cancel <id>'
+type SubagentSession = Awaited<ReturnType<typeof createAgentSession>>['session']
 
 const runSubagent = async (
   pi: ExtensionAPI,
@@ -10,7 +11,7 @@ const runSubagent = async (
   jobId: number,
   cwd: string,
   notify: (text: string) => void,
-  setSession: (session: any) => void,
+  setSession: (session: SubagentSession) => void,
 ) => {
   const { session } = await createAgentSession({
     cwd,
@@ -52,7 +53,7 @@ const sendStatus = (pi: ExtensionAPI, store: ReturnType<typeof createSubagentSto
 
 const handleKnownAction = (
   store: ReturnType<typeof createSubagentStore>,
-  sessions: Map<number, any>,
+  sessions: Map<number, SubagentSession>,
   args: string,
   notify: (text: string, level?: string) => void,
 ) => {
@@ -72,7 +73,7 @@ const handleKnownAction = (
 
 export default function subagentMode(pi: ExtensionAPI) {
   const store = createSubagentStore()
-  const sessions = new Map<number, any>()
+  const sessions = new Map<number, SubagentSession>()
 
   pi.on('session_start', (_event, ctx) => {
     ctx.ui.setStatus(SUBAGENT_KEY, store.summary())

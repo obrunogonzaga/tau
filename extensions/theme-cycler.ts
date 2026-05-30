@@ -1,10 +1,11 @@
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { ExtensionAPI, ExtensionContext } from '@earendil-works/pi-coding-agent'
+import type { KeyId } from '@earendil-works/pi-tui'
 
 type ShortcutKey = {
-  ctrlAlt(key: string): unknown
-  ctrlShift(key: string): unknown
+  ctrlAlt(key: string): KeyId
+  ctrlShift(key: string): KeyId
 }
 
 const THEME_KEY = 'tau-theme'

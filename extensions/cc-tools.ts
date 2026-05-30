@@ -108,7 +108,7 @@ const registerTools = (pi: ExtensionAPI, cwd: string) => {
     original: ReturnType<typeof createReadTool>,
     getArg: (args: Args) => string | undefined,
     summarize: (
-      result: AgentToolResult<any>,
+      result: AgentToolResult<unknown>,
       options: ToolRenderResultOptions,
       theme: Theme,
       context: ToolRenderContext,
